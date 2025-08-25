@@ -34,8 +34,7 @@ jobs:
         # Download jq directly to avoid PATH issues
         curl -L -o /usr/bin/jq.exe https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-win64.exe
         chmod +x /usr/bin/jq.exe
-        # Create symlink without .exe extension
-        ln -sf /usr/bin/jq.exe /usr/bin/jq
+        # Git Bash on Windows automatically finds .exe files
         # Verify jq works
         jq --version
       shell: bash
