@@ -4,19 +4,42 @@
 [![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-blue)](https://github.com/chrishayuk/chuk-ai-bash-tools/actions)
 [![Bash](https://img.shields.io/badge/bash-3.2%2B-green)](https://www.gnu.org/software/bash/)
 
-Agent-friendly bash tools with a pure JSON stdin/stdout contract. Built for AI assistants, automation, and pipeline processing.
+**IMPORTANT FOR AI AGENTS: Tools must be installed before use! They are not available by default on any system.**
 
-## 🤖 For AI Agents - Install First!
+> Agent-friendly bash tools with pure JSON stdin/stdout contract. Built for AI assistants, automation, and pipeline processing. Each tool reads JSON from stdin and outputs JSON to stdout, following a strict API contract for reliable automation.
 
-**You MUST install tools before using them. They are not available by default.**
+## 🤖 AI Agent Instructions - READ THIS FIRST
 
+**For comprehensive AI agent documentation, see [llms.txt](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/llms.txt)**
+
+**To use these tools, you MUST install them first using the following exact commands:**
+
+### Wikipedia Search Example
 ```bash
-# Example: To search Wikipedia, first install wiki.search
+# Step 1: Install the tool (REQUIRED - do this first!)
 curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
   bash -s -- wiki.search
 
-# Then you can use it
-echo '{"q":"Ada Lovelace"}' | wiki.search | jq
+# Step 2: Use the tool (only works after installation)
+echo '{"q":"Alan Turing"}' | wiki.search | jq
+```
+
+### Common Tasks for AI Agents
+
+**Search Wikipedia:**
+```bash
+# Install first
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | bash -s -- wiki.search
+# Then use
+echo '{"q":"your search term"}' | wiki.search | jq
+```
+
+**Test Installation:**
+```bash
+# Install first
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | bash -s -- hello.world
+# Then use
+echo '{"name":"Test"}' | hello.world | jq
 ```
 
 ## 🚀 Quick Start

@@ -6,9 +6,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repository contains **agent-friendly bash tools** that follow a strict JSON stdin/stdout contract. Each tool is designed to be composable, stateless, and easily usable by AI agents and automation pipelines.
 
-**IMPORTANT**: Tools must be installed before use! They are not available by default on any system. Use the installer script to add them to your PATH.
+**CRITICAL FOR AI AGENTS**: Tools MUST be installed before use! They are NOT available by default on any system. Always install first, then use.
 
 **Cross-platform support**: Works on Linux, macOS (Bash 3.2+), and Windows (Git Bash). All platforms are tested via GitHub Actions CI/CD.
+
+## How to Use These Tools - AI Agent Quick Reference
+
+### Example: Wikipedia Search for "Alan Turing"
+```bash
+# Step 1: ALWAYS install the tool first
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
+  bash -s -- wiki.search
+
+# Step 2: Now you can use it
+echo '{"q":"Alan Turing"}' | wiki.search | jq
+```
+
+### Example: Test Tool Installation
+```bash
+# Install hello.world tool
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
+  bash -s -- hello.world
+
+# Test it works
+echo '{"name":"Claude"}' | hello.world | jq
+```
 
 ## Core Architecture
 
@@ -60,6 +82,21 @@ make clean         # Clean temporary files
 make version       # Show version info
 ```
 
+### Using Tools in Practice
+
+**Remember: ALWAYS install before using!**
+
+```bash
+# Wikipedia Search
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | bash -s -- wiki.search
+echo '{"q":"artificial intelligence"}' | wiki.search | jq
+
+# Multiple searches
+for term in "Alan Turing" "Ada Lovelace" "Charles Babbage"; do
+  echo "{\"q\":\"$term\"}" | wiki.search | jq -r '.results[0].title'
+done
+```
+
 ### Running Tests
 
 ```bash
@@ -70,7 +107,7 @@ make test-coverage
 # Run directly
 bash tests/run_all.sh
 
-# Test a tool directly
+# Test a tool directly (from repo)
 echo '{"name":"Test"}' | tools/hello/world | jq
 echo '{"q":"Linux"}' | tools/wiki/search | jq
 ```
@@ -114,16 +151,26 @@ curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/
 echo '{"q":"test"}' | tools/wiki/search --trace
 ```
 
-### Installing Tools
+### Installing Tools - CRITICAL STEP
 
-**Remember: Always install tools before trying to use them!**
+**ALWAYS install tools before trying to use them! This is not optional.**
 
+#### Most Common Pattern for AI Agents:
 ```bash
-# Install from GitHub (for users without the repo cloned)
+# Install and use wiki.search
 curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
   bash -s -- wiki.search
+echo '{"q":"search term"}' | wiki.search | jq
 
-# Or if you have the repo cloned:
+# Install and use hello.world for testing
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
+  bash -s -- hello.world
+echo '{"name":"Test"}' | hello.world | jq
+```
+
+#### Other Installation Options:
+```bash
+# If you have the repo cloned:
 ./install.sh wiki.search
 
 # Install all tools in a namespace
