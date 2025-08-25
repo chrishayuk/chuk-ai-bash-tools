@@ -69,15 +69,6 @@ jobs:
         
     - name: Test local installation
       run: |
-        # Debug for Windows
-        echo "OS: $RUNNER_OS"
-        echo "Shell: $SHELL"
-        echo "PWD: $PWD"
-        
-        # Check jq is available
-        which jq || { echo "jq not found"; exit 1; }
-        jq --version || { echo "jq version check failed"; exit 1; }
-        
         # Test actual installation
         # Use temp directory that works on all platforms
         if [[ "$RUNNER_OS" == "Windows" ]]; then
@@ -86,56 +77,20 @@ jobs:
         else
           TESTDIR="${RUNNER_TEMP:-/tmp}/test-install"
         fi
-        echo "Test directory: $TESTDIR"
         mkdir -p "$TESTDIR"
         
-        # Check what tools are available
-        echo "Checking available tools..."
-        echo "Current directory: $(pwd)"
-        ls -la . | head -20
-        echo "---"
-        ls -la tools/ || echo "tools/ not found"
-        echo "---"
-        ls -la tools/hello/ || echo "tools/hello not found"
-        echo "---"
-        ls -la tools/wiki/ || echo "tools/wiki not found"
-        
-        # List available tools via installer
-        echo "Listing tools via installer..."
-        AGENT_MODE=1 bash ./install.sh --list || echo "List failed"
-        
         # Install (will use agent mode in CI)
-        echo "Installing..."
-        INSTALL_RESULT=$(INSTALL_DIR="$TESTDIR" FORCE=1 bash ./install.sh hello.world 2>&1) || {
-          echo "Installation failed with exit code: $?"
-          echo "Output: $INSTALL_RESULT"
-          exit 1
-        }
+        INSTALL_RESULT=$(INSTALL_DIR="$TESTDIR" FORCE=1 bash ./install.sh hello.world)
         echo "$INSTALL_RESULT"
         
         # Verify installation succeeded via JSON output
-        echo "$INSTALL_RESULT" | jq -e '.status == "success"' > /dev/null || {
-          echo "JSON status check failed"
-          echo "$INSTALL_RESULT" | jq '.'
-          exit 1
-        }
+        echo "$INSTALL_RESULT" | jq -e '.status == "success"' > /dev/null
         
         # Verify file exists
-        ls -la "$TESTDIR/" || true
-        test -f "$TESTDIR/hello.world" || {
-          echo "File not found: $TESTDIR/hello.world"
-          exit 1
-        }
+        test -f "$TESTDIR/hello.world"
         
         # Test the tool works
-        echo '{"name":"CI"}' | "$TESTDIR/hello.world" | jq -e '.ok == true' > /dev/null || {
-          echo "Tool test failed"
-          echo "Tool output:"
-          echo '{"name":"CI"}' | "$TESTDIR/hello.world"
-          exit 1
-        }
-        
-        echo "All tests passed!"
+        echo '{"name":"CI"}' | "$TESTDIR/hello.world" | jq -e '.ok == true' > /dev/null
       shell: bash
         
   shellcheck:

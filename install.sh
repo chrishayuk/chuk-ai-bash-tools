@@ -203,8 +203,18 @@ AVAILABLE_TOOLS=()
 for namespace in $NAMESPACES; do
     if [[ -d "$TOOLS_BASE_DIR/$namespace" ]]; then
         # Use local files if available
-        # Use ls instead of find for better Windows compatibility
-        TOOLS=$(ls -1 "$TOOLS_BASE_DIR/$namespace" 2>/dev/null | grep -v "^\." || true)
+        # Simple file listing for Windows compatibility
+        TOOLS=""
+        for file in "$TOOLS_BASE_DIR/$namespace"/*; do
+            if [[ -f "$file" ]]; then
+                filename=$(basename "$file")
+                # Skip hidden files (starting with .)
+                case "$filename" in
+                    .*) continue ;;
+                    *) TOOLS="$TOOLS $filename" ;;
+                esac
+            fi
+        done
     else
         # Try to fetch from GitHub API
         TOOLS=$(curl -fsSL "$REPO_URL/$namespace" 2>/dev/null | jq -r '.[] | select(.type=="file") | .name') || continue
