@@ -1,0 +1,70 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+*.swp
+*.swo
+
+# Editor directories and files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.vim/
+
+# Test artifacts
+test-results/
+*.log
+coverage/
+.coverage
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# Build artifacts
+dist/
+build/
+*.tar.gz
+*.zip
+
+# Checksums (generated during release)
+checksums/
+
+# Local testing
+local-test/
+sandbox/
+.env
+.env.local
+
+# CI/CD
+.github/workflows/run/
+
+# Package manager
+node_modules/
+vendor/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+env/
+
+# Shell testing
+bats/
+test/libs/
+
+# Documentation build
+docs/_build/
+docs/_site/
+*.pdf

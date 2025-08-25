@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage(){ cat <<'EOF'
+wiki.search — Wikipedia search (JSON in → JSON out)
+Reads stdin JSON like:
+  { "q":"alan turing", "lang":"en", "limit":5, "timeout":10 }
+
+Outputs:
+  { "ok":true, "count":N, "results":[{"title":"...","pageid":123,"snippet":"...","url":"..."}] }
+
+Options:
+  --schema   Print JSON schema
+  --help     Show this help
+  --trace    Verbose stderr logs
+
+Deps: bash, curl, jq
+EOF
+}
+
+schema(){ cat <<'JSON'
+{
+  "type": "object",
+  "properties": {
+    "q":     { "type":"string", "description":"Search query" },
+    "query": { "type":"string", "description":"Alias for q" },
+    "lang":  { "type":"string", "default":"en", "description":"Wikipedia language code" },
+    "limit": { "type":"integer", "minimum":1, "maximum":50, "default":5 },
+    "timeout": { "type":"integer", "minimum":1, "maximum":60, "default":10 }
+  },
+  "anyOf": [
+    { "required": ["q"] },
+    { "required": ["query"] }
+  ]
+}
+JSON
+}
+
+need(){ command -v "$1" >/dev/null 2>&1 || { echo "Missing dependency: $1" >&2; exit 127; }; }
+
+TRACE=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --schema) schema; exit 0;;
+    --trace) TRACE=1; shift;;
+    -h|--help) usage; exit 0;;
+    *) echo "Unknown option: $1" >&2; exit 2;;
+  esac
+done
+
+need jq
+need curl
+
+input="$(cat)"
+[[ $TRACE -eq 1 ]] && { echo "IN: $input" >&2; }
+
+q="$(jq -r '.q // .query // empty' <<<"$input")"
+lang="$(jq -r '.lang // "en"' <<<"$input")"
+limit="$(jq -r '.limit // 5' <<<"$input")"
+timeout_s="$(jq -r '.timeout // 10' <<<"$input")"
+
+if [[ -z "$q" ]]; then
+  echo "Missing search query (.q or .query)" >&2
+  jq -n '{ok:false, error:"missing_query"}'
+  exit 2
+fi
+
+# URL-encode the query using jq
+q_enc="$(printf '%s' "$q" | jq -s -R -r @uri)"
+api="https://${lang}.wikipedia.org/w/api.php?action=query&list=search&format=json&utf8=1&srsearch=${q_enc}&srlimit=${limit}"
+
+[[ $TRACE -eq 1 ]] && { echo "GET $api (timeout=${timeout_s}s)" >&2; }
+
+# Perform request with timing + status code
+body_file="$(mktemp /tmp/wikisearch.XXXXXX)"
+trap 'rm -f "$body_file"' EXIT
+status="$(curl -sS -L --max-time "$timeout_s" -w "%{http_code}" -o "$body_file" "$api" 2>/dev/null || echo "000")"
+
+if [[ "$status" != "200" ]]; then
+  err="$(cat "$body_file" 2>/dev/null || true)"
+  [[ -s "$body_file" ]] || err="http_error_${status}"
+  rm -f "$body_file"
+  jq -n --arg status "$status" --arg err "$err" '{ok:false, status:($status|tonumber?), error:$err}'
+  exit 22
+fi
+
+# Transform into friendly JSON (strip HTML tags in snippet)
+# Also attach canonical URL by pageid.
+jq --arg lang "$lang" -c '
+  if .error then
+    {ok:false, error:.error.info}
+  else
+    .query.search
+    | map({
+        title,
+        pageid,
+        snippet: (.snippet | gsub("<[^>]+>"; "") | gsub("&quot;"; "\"") | gsub("&amp;"; "&") | gsub("&#39;"; "'\''") | gsub("&lt;"; "<") | gsub("&gt;"; ">")),
+        url: ("https://" + $lang + ".wikipedia.org/?curid=" + (.pageid|tostring))
+      })
+    | { ok:true, count:(length), results:. }
+  end
+' "$body_file"
