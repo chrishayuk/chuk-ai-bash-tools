@@ -74,7 +74,7 @@ api="https://${lang}.wikipedia.org/w/api.php?action=query&list=search&format=jso
 # Perform request with timing + status code
 body_file="$(mktemp /tmp/wikisearch.XXXXXX)"
 trap 'rm -f "$body_file"' EXIT
-status="$(curl -sS -L --max-time "$timeout_s" -w "%{http_code}" -o "$body_file" "$api" 2>/dev/null || echo "000")"
+status="$(curl -sS -L --max-time "$timeout_s" -H "User-Agent: chuk-ai-bash-tools/1.0 (https://github.com/chrishayuk/chuk-ai-bash-tools)" -w "%{http_code}" -o "$body_file" "$api" 2>/dev/null || echo "000")"
 
 if [[ "$status" != "200" ]]; then
   err="$(cat "$body_file" 2>/dev/null || true)"

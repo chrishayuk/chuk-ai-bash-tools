@@ -2,13 +2,14 @@
 
 > Agent-friendly bash tools with pure JSON stdin/stdout contract. Built for AI assistants, automation, and pipeline processing. Each tool reads JSON from stdin and outputs JSON to stdout, following a strict API contract for reliable automation.
 
-This repository provides composable bash tools designed specifically for AI agents and automation. All tools follow a consistent JSON-based contract that makes them predictable and easy to use programmatically. The project uses a namespace-based organization (wiki.search, fs.read, etc.) with automatic discovery and installation.
+This repository provides composable bash tools designed specifically for AI agents and automation. All tools follow a consistent JSON-based contract that makes them predictable and easy to use programmatically. The project uses a namespace-based organization (wiki.search, fs.read, etc.) with automatic discovery and installation. Compatible with Bash 3.2+ (including macOS default shell).
 
 ## Core Documentation
 
 - [API Contract](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/api-contract.md): **START HERE** - The formal JSON stdin/stdout specification that all tools follow
 - [Installation Guide](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/installation.md): Complete installation instructions including agent mode for automated setup
 - [Development Guide](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/development.md): How to create new tools following the contract
+- [Testing Guide](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/testing.md): Comprehensive testing documentation and CI/CD integration
 
 ## Quick Start for AI Agents
 
@@ -21,6 +22,11 @@ echo '{"q":"artificial intelligence"}' | wiki.search
 
 # Get tool schema for validation
 wiki.search --schema
+
+# For local development, use Make
+make install-hello
+make test
+make help  # See all available commands
 ```
 
 ## Tool Categories
@@ -42,6 +48,33 @@ wiki.search --schema
 - [fs.diff](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/tools/fs-diff.md): Compare files
 - [web.fetch](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/tools/web-fetch.md): Fetch web pages
 - [json.query](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/tools/json-query.md): Query JSON with jq
+
+## Development with Make
+
+The project includes a comprehensive Makefile for common tasks:
+
+```bash
+# Testing
+make test              # Run all tests
+make test-hello        # Test specific tool
+make test-coverage     # Check test coverage
+make test-contract     # Validate API contract compliance
+
+# Installation
+make install           # Install all tools
+make install-hello     # Install specific tool
+make install-local     # Install from local repository
+
+# Development
+make check            # Check dependencies
+make lint             # Run shellcheck
+make validate         # Validate all tools
+make list             # List available tools
+make clean            # Clean temporary files
+
+# Help
+make help             # Show all available commands
+```
 
 ## Agent Integration Examples
 
@@ -82,6 +115,7 @@ echo '{"name":"Test"}' | hello.world && echo "Tools working"
 - **No Side Effects**: Tools are stateless unless explicitly requested
 - **Exit Codes**: Standard codes (0=success, 2=invalid input, 127=missing deps)
 - **Agent Mode**: Non-interactive installation with JSON responses
+- **Bash 3.2+ Compatible**: Works with macOS default shell, no Bash 4 required
 
 ## Tool Contract Summary
 
@@ -119,23 +153,35 @@ curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/
 }
 ```
 
-## Testing Tools
+## Testing and CI/CD
 
 ```bash
-# Verify installation
-hello.world --help
+# Run comprehensive test suite
+bash tests/run_all.sh
 
-# Test with sample input
-echo '{"name":"World"}' | hello.world | jq '.ok'
+# Or use Make
+make test
+make test-coverage
 
-# Validate against schema
-wiki.search --schema | jq '.properties'
+# GitHub Actions CI runs on:
+# - Ubuntu latest
+# - macOS latest
+# - Tests Bash 3.2+ compatibility
+# - Validates API contract compliance
 ```
+
+## Dependencies
+
+- **bash** 3.2+ (compatible with macOS default)
+- **curl** - For HTTP operations
+- **jq** 1.6+ - For JSON processing
+- Additional tool-specific dependencies documented per tool
 
 ## Optional Resources
 
 - [README](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/README.md): Human-friendly overview
+- [CLAUDE.md](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/CLAUDE.md): Instructions for Claude Code instances
 - [Contributing](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/CONTRIBUTING.md): Contribution guidelines
 - [License](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/LICENSE.md): MIT License
-- [Changelog](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/CHANGELOG.md): Version history
-- [Tests](https://github.com/chrishayuk/chuk-ai-bash-tools/tree/main/tests): Test suites using bats
+- [Tests](https://github.com/chrishayuk/chuk-ai-bash-tools/tree/main/tests): Test suites for all tools
+- [GitHub Actions](https://github.com/chrishayuk/chuk-ai-bash-tools/tree/main/.github/workflows): CI/CD pipelines

@@ -11,6 +11,10 @@ curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/
 
 # Try it out
 echo '{"name":"World"}' | hello.world | jq
+
+# Or if you've cloned the repo, use Make
+make install-hello
+make test
 ```
 
 ## 📦 Installation
@@ -208,6 +212,18 @@ done
 
 ## 🛠 Development
 
+### Using Make
+```bash
+# Common development tasks
+make help          # Show all available commands
+make check         # Check dependencies
+make test          # Run all tests
+make lint          # Run shellcheck
+make validate      # Validate all tools
+make list          # List available tools
+make clean         # Clean temporary files
+```
+
 ### Tool Contract
 Every tool must:
 1. Read JSON from stdin
@@ -265,19 +281,27 @@ echo '{"input":"test"}' | mygroup.mytool | jq
 
 ### Running Tests
 ```bash
-# Install test framework
-npm install -g bats
+# Using Make (recommended)
+make test              # Run all tests
+make test-hello        # Test hello.world tool
+make test-wiki         # Test wiki.search tool
+make test-installer    # Test installer
+make test-coverage     # Check test coverage
+make test-contract     # Test API contract compliance
 
-# Run all tests
-bats tests/
+# Or run directly
+bash tests/run_all.sh
 
-# Run specific test
-bats tests/wiki/test_search.bats
+# The test suite checks:
+# - Tool functionality with various inputs
+# - Schema and help flags
+# - Installer in different modes
+# - Bash 3.2 compatibility
 ```
 
 ## 🔧 Dependencies
 
-- `bash` 4.0+
+- `bash` 3.2+ (compatible with macOS default shell)
 - `curl`
 - `jq` 1.6+
 - Additional tools may require specific dependencies

@@ -12,7 +12,28 @@ Guide for creating new tools for chuk-ai-bash-tools.
 - [Common Patterns](#common-patterns)
 - [Publishing Tools](#publishing-tools)
 
-## Quick Start
+## Quick Start with Make
+
+Use the Makefile for rapid development:
+
+```bash
+# Check your environment
+make check
+
+# See all available commands
+make help
+
+# Validate existing tools
+make validate
+
+# Run tests
+make test
+
+# Clean up
+make clean
+```
+
+## Quick Start - Creating a Tool
 
 Create a minimal tool in 5 minutes:
 
@@ -291,7 +312,7 @@ echo '{"field1":"value"}' | namespace.tool | jq
 [Provide 3-5 real examples with output]
 
 ## Dependencies
-- bash 4.0+
+- bash 3.2+ (compatible with macOS default)
 - jq 1.6+
 - other dependencies
 
@@ -324,6 +345,19 @@ echo '{"ok":true,"result":"processed"}'
 
 ## Testing Tools
 
+### Quick Testing
+```bash
+# Run test suite
+bash tests/run_all.sh
+
+# Test specific tool
+bash tests/test_hello.sh
+
+# Use Makefile
+make test
+make test-coverage
+```
+
 ### Manual Testing
 ```bash
 # Test basic functionality
@@ -340,67 +374,66 @@ echo '{}' | tools/namespace/tool  # Missing required field
 echo '{"test":"data"}' | tools/namespace/tool --trace
 ```
 
-### Automated Testing with Bats
+### Writing Tests
 
-Create `tests/namespace/test_tool.bats`:
+Create `tests/test_namespace.sh`:
 
 ```bash
-#!/usr/bin/env bats
+#!/usr/bin/env bash
+# Test suite for namespace.tool
 
-setup() {
-    # Path to tool
-    TOOL="tools/namespace/tool"
-}
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
 
-@test "tool exists and is executable" {
-    [ -f "$TOOL" ]
-    [ -x "$TOOL" ]
-}
+TESTS_PASSED=0
+TESTS_FAILED=0
 
-@test "help flag works" {
-    run $TOOL --help
-    [ "$status" -eq 0 ]
-    [[ "$output" =~ "namespace.tool" ]]
-}
+echo "Testing namespace.tool..."
 
-@test "schema flag outputs valid JSON" {
-    run $TOOL --schema
-    [ "$status" -eq 0 ]
-    echo "$output" | jq -e . >/dev/null
-}
+# Test 1: Basic functionality
+echo -n "  Test 1: Basic test... "
+result=$(echo '{"field1":"test"}' | ./tools/namespace/tool)
+if echo "$result" | jq -e '.ok == true' > /dev/null 2>&1; then
+    echo -e "${GREEN}✓${NC}"
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+else
+    echo -e "${RED}✗${NC}"
+    echo "    Output: $result"
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+fi
 
-@test "processes valid input" {
-    run bash -c 'echo "{\"field1\":\"test\"}" | '"$TOOL"
-    [ "$status" -eq 0 ]
-    echo "$output" | jq -e '.ok == true' >/dev/null
-}
+# Test 2: Schema validation
+echo -n "  Test 2: Schema flag... "
+result=$(./tools/namespace/tool --schema)
+if echo "$result" | jq -e '.type == "object"' > /dev/null 2>&1; then
+    echo -e "${GREEN}✓${NC}"
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+else
+    echo -e "${RED}✗${NC}"
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+fi
 
-@test "handles missing required field" {
-    run bash -c 'echo "{}" | '"$TOOL"
-    [ "$status" -ne 0 ]
-    echo "$output" | jq -e '.ok == false' >/dev/null
-}
+# Summary
+echo ""
+echo "Results: $TESTS_PASSED passed, $TESTS_FAILED failed"
 
-@test "handles invalid JSON" {
-    run bash -c 'echo "not json" | '"$TOOL"
-    [ "$status" -ne 0 ]
-}
-
-@test "trace mode outputs debug info" {
-    run bash -c 'echo "{\"field1\":\"test\"}" | '"$TOOL"' --trace 2>&1'
-    [ "$status" -eq 0 ]
-    [[ "$output" =~ "DEBUG:" ]]
-}
+if [[ $TESTS_FAILED -gt 0 ]]; then
+    exit 1
+fi
 ```
 
 Run tests:
 ```bash
-# Install bats
-npm install -g bats
+# Run test
+bash tests/test_namespace.sh
 
-# Run tests
-bats tests/namespace/test_tool.bats
+# Or use Makefile
+make test
 ```
+
+See [Testing Guide](testing.md) for comprehensive testing documentation.
 
 ### Integration Testing
 ```bash
@@ -586,6 +619,8 @@ jq -n \
 - [ ] Tests written and passing
 - [ ] Dependencies documented
 - [ ] Examples provided
+- [ ] Validated with `make validate`
+- [ ] Tests pass with `make test`
 
 ### Steps to Publish
 
@@ -617,11 +652,15 @@ EOF
 4. **Test locally**
 ```bash
 # Run tests
-bats tests/namespace/test_tool.bats
+bash tests/test_namespace.sh
 
 # Test installation
 ./install.sh namespace.tool
 echo '{"test":"data"}' | namespace.tool | jq
+
+# Use Makefile
+make test
+make install
 ```
 
 5. **Submit PR**
@@ -712,5 +751,7 @@ rm -rf "$temp_dir"
 
 - Review existing tools for examples
 - Check [API Contract](api-contract.md) for specifications
+- See [Testing Guide](testing.md) for testing documentation
+- Use `make help` to see available commands
 - Open a [discussion](https://github.com/chrishayuk/chuk-ai-bash-tools/discussions) for questions
 - Submit [issues](https://github.com/chrishayuk/chuk-ai-bash-tools/issues) for bugs

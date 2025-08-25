@@ -37,8 +37,8 @@ else
 fi
 
 # Helper functions
-info() { [[ "$AGENT_MODE" == "0" ]] && echo -e "${GREEN}→${NC} $1"; }
-warn() { [[ "$AGENT_MODE" == "0" ]] && echo -e "${YELLOW}⚠${NC} $1" >&2; }
+info() { [[ "$AGENT_MODE" == "0" ]] && echo -e "${GREEN}→${NC} $1" || true; }
+warn() { [[ "$AGENT_MODE" == "0" ]] && echo -e "${YELLOW}⚠${NC} $1" >&2 || true; }
 error() {
     if [[ "$AGENT_MODE" == "1" ]]; then
         jq -n --arg msg "$1" '{status:"error", message:$msg}'
@@ -180,12 +180,12 @@ NAMESPACES=$(curl -fsSL "$REPO_URL" 2>/dev/null | jq -r '.[] | select(.type=="di
     exit 1
 }
 
-# Build tool list
-declare -A AVAILABLE_TOOLS
+# Build tool list (using regular array for Bash 3.2 compatibility)
+AVAILABLE_TOOLS=()
 for namespace in $NAMESPACES; do
     TOOLS=$(curl -fsSL "$REPO_URL/$namespace" 2>/dev/null | jq -r '.[] | select(.type=="file") | .name') || continue
     for tool in $TOOLS; do
-        AVAILABLE_TOOLS["$namespace.$tool"]=1
+        AVAILABLE_TOOLS+=("$namespace.$tool")
     done
 done
 
@@ -193,13 +193,13 @@ done
 if [[ "$LIST_MODE" == "1" ]]; then
     if [[ "$AGENT_MODE" == "1" ]]; then
         # JSON output
-        tools_array=$(printf '%s\n' "${!AVAILABLE_TOOLS[@]}" | sort | jq -R . | jq -s .)
+        tools_array=$(printf '%s\n' "${AVAILABLE_TOOLS[@]}" | sort -u | jq -R . | jq -s .)
         jq -n --argjson tools "$tools_array" '{status:"success", tools:$tools}'
     else
         echo -e "${BOLD}Available tools:${NC}"
         echo
         current_namespace=""
-        for tool in $(printf '%s\n' "${!AVAILABLE_TOOLS[@]}" | sort); do
+        for tool in $(printf '%s\n' "${AVAILABLE_TOOLS[@]}" | sort -u); do
             namespace="${tool%%.*}"
             name="${tool#*.}"
             if [[ "$namespace" != "$current_namespace" ]]; then
@@ -217,11 +217,11 @@ fi
 if [[ ${#SELECTED_GROUPS[@]} -gt 0 ]]; then
     for group in "${SELECTED_GROUPS[@]}"; do
         if [[ "$group" == "ALL" ]]; then
-            for tool in "${!AVAILABLE_TOOLS[@]}"; do
+            for tool in "${AVAILABLE_TOOLS[@]}"; do
                 SELECTED_TOOLS+=("$tool")
             done
         else
-            for tool in "${!AVAILABLE_TOOLS[@]}"; do
+            for tool in "${AVAILABLE_TOOLS[@]}"; do
                 if [[ "$tool" == "$group."* ]]; then
                     SELECTED_TOOLS+=("$tool")
                 fi
@@ -250,7 +250,15 @@ SELECTED_TOOLS=($(printf '%s\n' "${SELECTED_TOOLS[@]}" | sort -u))
 VALID_TOOLS=()
 INVALID_TOOLS=()
 for tool in "${SELECTED_TOOLS[@]}"; do
-    if [[ -n "${AVAILABLE_TOOLS[$tool]:-}" ]]; then
+    # Check if tool exists in available tools
+    tool_found=0
+    for available in "${AVAILABLE_TOOLS[@]}"; do
+        if [[ "$available" == "$tool" ]]; then
+            tool_found=1
+            break
+        fi
+    done
+    if [[ $tool_found -eq 1 ]]; then
         VALID_TOOLS+=("$tool")
     else
         INVALID_TOOLS+=("$tool")
@@ -345,8 +353,16 @@ done
 # Output results
 if [[ "$AGENT_MODE" == "1" ]]; then
     # JSON output
-    installed_array=$(printf '%s\n' "${INSTALLED[@]}" | jq -R . | jq -s .)
-    failed_array=$(printf '%s\n' "${FAILED[@]}" | jq -R . | jq -s .)
+    if [[ ${#INSTALLED[@]} -gt 0 ]]; then
+        installed_array=$(printf '%s\n' "${INSTALLED[@]}" | jq -R . | jq -s .)
+    else
+        installed_array='[]'
+    fi
+    if [[ ${#FAILED[@]} -gt 0 ]]; then
+        failed_array=$(printf '%s\n' "${FAILED[@]}" | jq -R . | jq -s .)
+    else
+        failed_array='[]'
+    fi
     
     if [[ ${#FAILED[@]} -gt 0 ]]; then
         jq -n \

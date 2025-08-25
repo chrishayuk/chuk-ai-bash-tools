@@ -457,6 +457,23 @@ print(f"Found {result['count']} results")
 - [ ] Arrays properly formatted
 
 ### Testing Contract Compliance
+
+Use the provided test suite to validate contract compliance:
+
+```bash
+# Run all tests
+bash tests/run_all.sh
+
+# Test specific tool
+bash tests/test_hello.sh
+
+# Use Makefile for testing
+make test
+make test-contract
+make test-coverage
+```
+
+For manual testing:
 ```bash
 #!/bin/bash
 # Test tool contract compliance
@@ -485,22 +502,9 @@ if echo "invalid" | $TOOL 2>/dev/null | jq -e '.ok == false' >/dev/null; then
 else
   echo "✗ Doesn't handle invalid JSON properly"
 fi
-
-# Test: Returns JSON
-if echo '{}' | $TOOL 2>/dev/null | jq -e . >/dev/null; then
-  echo "✓ Returns valid JSON"
-else
-  echo "✗ Doesn't return valid JSON"
-fi
-
-# Test: Uses correct exit codes
-echo '{}' | $TOOL >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
-  echo "✓ Uses non-zero exit code for errors"
-else
-  echo "✗ Should use non-zero exit code for errors"
-fi
 ```
+
+See [Testing Guide](testing.md) for comprehensive testing documentation.
 
 ## Best Practices
 
@@ -594,6 +598,9 @@ Tools MUST comply with this contract to be included in chuk-ai-bash-tools. Non-c
 
 ## References
 
+- [Testing Guide](testing.md) - Comprehensive testing documentation
+- [Development Guide](development.md) - Creating new tools
+- [Installation Guide](installation.md) - Installation instructions
 - [JSON Schema Specification](https://json-schema.org/)
 - [JSON RFC 7159](https://tools.ietf.org/html/rfc7159)
 - [Exit Codes](https://www.gnu.org/software/bash/manual/html_node/Exit-Status.html)

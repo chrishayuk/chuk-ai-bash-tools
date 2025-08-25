@@ -31,6 +31,46 @@ Every tool MUST follow these rules:
 
 ## Common Development Tasks
 
+### Using Make
+
+The project includes a comprehensive Makefile for common tasks:
+
+```bash
+# Essential commands
+make help          # Show all available commands
+make test          # Run all tests
+make check         # Check dependencies
+make install       # Install all tools
+make list          # List available tools
+
+# Testing
+make test-hello    # Test hello.world tool
+make test-wiki     # Test wiki.search tool
+make test-coverage # Check test coverage
+make test-contract # Validate API contract
+
+# Development
+make lint          # Run shellcheck
+make validate      # Validate all tools
+make clean         # Clean temporary files
+make version       # Show version info
+```
+
+### Running Tests
+
+```bash
+# Using Make (recommended)
+make test
+make test-coverage
+
+# Run directly
+bash tests/run_all.sh
+
+# Test a tool directly
+echo '{"name":"Test"}' | tools/hello/world | jq
+echo '{"q":"Linux"}' | tools/wiki/search | jq
+```
+
 ### Creating a New Tool
 
 1. Create tool in appropriate namespace:
@@ -58,10 +98,13 @@ echo '{"param":"value"}' | tools/NAMESPACE/TOOLNAME
 
 ### Testing Tools
 
-Currently no formal test framework is set up. To test:
 ```bash
-# Manual testing with sample input
-echo '{"q":"test query"}' | tools/wiki/search | jq
+# Run complete test suite
+bash tests/run_all.sh
+
+# Test installation from GitHub
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
+  FORCE=1 bash -s -- --dry-run hello.world
 
 # Test with trace mode for debugging
 echo '{"q":"test"}' | tools/wiki/search --trace
@@ -143,9 +186,19 @@ need curl
 - **Development Guide**: `docs/development.md` for detailed patterns
 - **Install Script**: `install.sh` for understanding tool installation
 
+## CI/CD
+
+The repository includes GitHub Actions workflows:
+- `.github/workflows/test.yml` - Runs tests on push/PR
+- `.github/workflows/release.yml` - Creates releases on tags
+
+Tests run on both Ubuntu and macOS to ensure compatibility.
+
 ## Notes
 
+- **Bash 3.2 Compatibility**: The installer and tools work with macOS's default Bash 3.2
 - Tools should be stateless and have no side effects unless explicitly requested
 - All tools must be pure bash (with common utilities like jq, curl)
 - Focus on composability - tools should work well in pipelines
 - Agent mode (`AGENT_MODE=1`) provides JSON output for installation and errors
+- Wikipedia API requires User-Agent header (already configured in wiki.search)

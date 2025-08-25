@@ -1,0 +1,131 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install jq (Ubuntu)
+      if: runner.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y jq
+      
+    - name: Install jq (macOS)
+      if: runner.os == 'macOS'
+      run: brew install jq
+      
+    - name: Check dependencies
+      run: |
+        bash --version
+        jq --version
+        curl --version | head -1
+        
+    - name: Make scripts executable
+      run: |
+        chmod +x install.sh
+        chmod +x tools/hello/world
+        chmod +x tools/wiki/search
+        chmod +x tests/*.sh
+        
+    - name: Run test suite
+      run: bash tests/run_all.sh
+      
+    - name: Test installer from GitHub
+      run: |
+        # Test that the installer can fetch tools from GitHub
+        AGENT_MODE=1 bash ./install.sh --list | jq -e '.status == "success"'
+        
+    - name: Test local installation
+      run: |
+        # Test actual installation
+        mkdir -p /tmp/test-install
+        INSTALL_DIR=/tmp/test-install FORCE=1 bash ./install.sh hello.world
+        
+        # Verify installation
+        test -f /tmp/test-install/hello.world
+        echo '{"name":"CI"}' | /tmp/test-install/hello.world | jq -e '.ok == true'
+        
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run ShellCheck
+      uses: ludeeus/action-shellcheck@master
+      with:
+        ignore_paths: tests
+        severity: warning
+        
+  bash-compatibility:
+    name: Bash Compatibility Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check for Bash 4+ features
+      run: |
+        echo "Checking for associative arrays (Bash 4+ feature)..."
+        if grep -r "declare -A" . --include="*.sh" --exclude-dir=.git; then
+          echo "ERROR: Found Bash 4+ associative arrays"
+          exit 1
+        else
+          echo "✓ No associative arrays found"
+        fi
+        
+        echo "Checking for other Bash 4+ features..."
+        # Add more checks as needed
+        
+  documentation:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check documentation files exist
+      run: |
+        for file in README.md LICENSE.md CLAUDE.md docs/api-contract.md docs/development.md docs/installation.md; do
+          if [[ ! -f "$file" ]]; then
+            echo "ERROR: Missing documentation file: $file"
+            exit 1
+          else
+            echo "✓ Found: $file"
+          fi
+        done
+        
+    - name: Check tool documentation
+      run: |
+        for tool in tools/*/*; do
+          if [[ -f "$tool" ]]; then
+            echo "Checking $tool..."
+            if ! $tool --help > /dev/null 2>&1; then
+              echo "ERROR: $tool missing --help"
+              exit 1
+            fi
+            if ! $tool --schema > /dev/null 2>&1; then
+              echo "ERROR: $tool missing --schema"
+              exit 1
+            fi
+          fi
+        done
+        echo "✓ All tools have documentation"

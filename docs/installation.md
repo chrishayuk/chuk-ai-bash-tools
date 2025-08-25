@@ -51,7 +51,27 @@ jq --version
 
 ## Installation Methods
 
-### Method 1: Direct from GitHub (Recommended)
+### Method 1: Using Make (If Repository Cloned)
+```bash
+# Clone the repository
+git clone https://github.com/chrishayuk/chuk-ai-bash-tools.git
+cd chuk-ai-bash-tools
+
+# Check dependencies
+make check
+
+# Install all tools
+make install
+
+# Install specific tools
+make install-hello
+make install-wiki
+
+# Install from local files
+make install-local
+```
+
+### Method 2: Direct from GitHub (Recommended for Remote)
 ```bash
 # Install specific tools
 curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
@@ -62,7 +82,7 @@ curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/
   bash -s -- --group wiki
 ```
 
-### Method 2: Clone and Install
+### Method 3: Clone and Install Script
 ```bash
 # Clone the repository
 git clone https://github.com/chrishayuk/chuk-ai-bash-tools.git
@@ -74,7 +94,7 @@ cd chuk-ai-bash-tools
 ./install.sh --all
 ```
 
-### Method 3: Download Installer
+### Method 4: Download Installer
 ```bash
 # Download installer
 wget https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh
@@ -85,7 +105,7 @@ chmod +x install.sh
 ./install.sh hello.world
 ```
 
-### Method 4: Agent Mode (For Automation)
+### Method 5: Agent Mode (For Automation)
 ```bash
 # Non-interactive JSON output
 AGENT_MODE=1 curl -fsSL .../install.sh | bash -s -- wiki.search
@@ -258,7 +278,32 @@ which wiki.search
 
 # List installed tools
 ls -la ~/.local/bin/ | grep -E "(wiki|fs|web|json|llm)\."
+
+# Run test suite
+bash tests/run_all.sh
+
+# Or use Makefile
+make test
 ```
+
+### Testing
+
+After installation, verify everything works:
+
+```bash
+# Run full test suite
+bash tests/run_all.sh
+
+# Test specific tools
+bash tests/test_hello.sh
+bash tests/test_wiki.sh
+
+# Use Makefile
+make test
+make test-coverage
+```
+
+See [Testing Guide](testing.md) for detailed testing documentation.
 
 ### Comprehensive Test
 ```bash
@@ -494,3 +539,11 @@ TOOLS_TO_INSTALL="wiki.search fs.read web.fetch"
 - Check [troubleshooting guide](troubleshooting.md)
 - Open an [issue on GitHub](https://github.com/chrishayuk/chuk-ai-bash-tools/issues)
 - See [FAQ](faq.md) for common questions
+
+## Related Documentation
+
+- [API Contract](api-contract.md) - Tool specifications
+- [Development Guide](development.md) - Creating new tools
+- [Testing Guide](testing.md) - Testing documentation
+- [Tool Catalog](../README.md#available-tools) - List of available tools
+- Run `make help` for common tasks

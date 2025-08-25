@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run tests
+      run: |
+        chmod +x tests/*.sh tools/*/*
+        bash tests/run_all.sh
+        
+    - name: Create tool manifest
+      run: |
+        echo "# Tool Manifest" > MANIFEST.md
+        echo "Generated: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> MANIFEST.md
+        echo "" >> MANIFEST.md
+        echo "## Available Tools" >> MANIFEST.md
+        
+        for namespace in tools/*; do
+          if [[ -d "$namespace" ]]; then
+            ns_name=$(basename "$namespace")
+            echo "" >> MANIFEST.md
+            echo "### $ns_name" >> MANIFEST.md
+            for tool in "$namespace"/*; do
+              if [[ -f "$tool" ]]; then
+                tool_name=$(basename "$tool")
+                echo "- \`$ns_name.$tool_name\`" >> MANIFEST.md
+              fi
+            done
+          fi
+        done
+        
+    - name: Create release notes
+      run: |
+        cat > RELEASE_NOTES.md << 'EOF'
+        ## Installation
+        
+        Install specific tools:
+        ```bash
+        curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/${{ github.ref_name }}/install.sh | \
+          bash -s -- hello.world wiki.search
+        ```
+        
+        Install all tools:
+        ```bash
+        curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/${{ github.ref_name }}/install.sh | \
+          bash -s -- --all
+        ```
+        
+        ## What's New
+        - Bash 3.2+ compatibility (works with macOS default shell)
+        - Comprehensive test suite
+        - GitHub Actions CI/CD pipeline
+        - User-Agent fix for Wikipedia API
+        
+        ## Tools Included
+        See MANIFEST.md for complete list
+        EOF
+        
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        body_path: RELEASE_NOTES.md
+        files: |
+          MANIFEST.md
+          install.sh
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
