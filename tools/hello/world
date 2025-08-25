@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# hello.world - Simple test tool for ai-bash-tools
+# Demonstrates the JSON stdin/stdout contract
+
+usage() {
+    cat <<'EOF'
+hello.world — Test tool for ai-bash-tools (JSON in → JSON out)
+
+Reads stdin JSON like:
+  { "name": "Alice", "greeting": "Hello", "excited": true }
+
+Outputs:
+  { "ok": true, "message": "Hello, Alice!", "timestamp": "..." }
+
+Options:
+  --schema   Print JSON schema
+  --help     Show this help
+  --version  Show version
+  --trace    Verbose stderr logs
+
+Examples:
+  echo '{"name":"World"}' | hello.world
+  echo '{"name":"AI","greeting":"Greetings","excited":true}' | hello.world
+  jq -n '{name:"Claude"}' | hello.world | jq
+
+Dependencies: bash, jq
+EOF
+}
+
+schema() {
+    cat <<'JSON'
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name to greet",
+      "default": "World"
+    },
+    "greeting": {
+      "type": "string",
+      "description": "Greeting word to use",
+      "default": "Hello",
+      "examples": ["Hello", "Hi", "Hey", "Greetings"]
+    },
+    "excited": {
+      "type": "boolean",
+      "description": "Add excitement with exclamation marks",
+      "default": false
+    },
+    "repeat": {
+      "type": "integer",
+      "description": "Number of times to repeat greeting",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 1
+    }
+  },
+  "required": []
+}
+JSON
+}
+
+version() {
+    echo "hello.world v1.0.0 (chuk-ai-bash-tools)"
+}
+
+# Check for required commands
+need() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "Missing dependency: $1" >&2
+        exit 127
+    fi
+}
+
+# Parse command line arguments
+TRACE=0
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --schema)
+            schema
+            exit 0
+            ;;
+        --help|-h)
+            usage
+            exit 0
+            ;;
+        --version|-v)
+            version
+            exit 0
+            ;;
+        --trace)
+            TRACE=1
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            echo "Try: hello.world --help" >&2
+            exit 2
+            ;;
+    esac
+done
+
+# Check dependencies
+need jq
+
+# Read JSON from stdin
+input="$(cat)"
+
+# Trace input if requested
+[[ $TRACE -eq 1 ]] && echo "DEBUG: Input: $input" >&2
+
+# Parse input with defaults
+name="$(jq -r '.name // "World"' <<<"$input")"
+greeting="$(jq -r '.greeting // "Hello"' <<<"$input")"
+excited="$(jq -r '.excited // false' <<<"$input")"
+repeat="$(jq -r '.repeat // 1' <<<"$input")"
+
+# Validate repeat count
+if [[ ! "$repeat" =~ ^[0-9]+$ ]] || [[ "$repeat" -lt 1 ]] || [[ "$repeat" -gt 10 ]]; then
+    jq -n '{ok: false, error: "repeat must be between 1 and 10"}'
+    exit 2
+fi
+
+# Trace parsed values if requested
+if [[ $TRACE -eq 1 ]]; then
+    echo "DEBUG: name='$name', greeting='$greeting', excited=$excited, repeat=$repeat" >&2
+fi
+
+# Build the message
+punctuation="."
+[[ "$excited" == "true" ]] && punctuation="!"
+
+base_message="$greeting, $name$punctuation"
+
+# Build array of messages if repeating
+messages=()
+for ((i=1; i<=repeat; i++)); do
+    messages+=("$base_message")
+done
+
+# Generate timestamp
+timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+# Output JSON response
+if [[ "$repeat" -eq 1 ]]; then
+    # Single message
+    jq -n \
+        --arg msg "$base_message" \
+        --arg ts "$timestamp" \
+        --arg name "$name" \
+        '{
+            ok: true,
+            message: $msg,
+            timestamp: $ts,
+            greeted: $name
+        }'
+else
+    # Multiple messages
+    messages_json=$(printf '%s\n' "${messages[@]}" | jq -R . | jq -s .)
+    jq -n \
+        --argjson msgs "$messages_json" \
+        --arg ts "$timestamp" \
+        --arg name "$name" \
+        --arg count "$repeat" \
+        '{
+            ok: true,
+            messages: $msgs,
+            message: $msgs[0],
+            count: ($count | tonumber),
+            timestamp: $ts,
+            greeted: $name
+        }'
+fi
+
+# Trace completion if requested
+[[ $TRACE -eq 1 ]] && echo "DEBUG: Completed successfully" >&2

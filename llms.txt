@@ -1,0 +1,141 @@
+# chuk-ai-bash-tools
+
+> Agent-friendly bash tools with pure JSON stdin/stdout contract. Built for AI assistants, automation, and pipeline processing. Each tool reads JSON from stdin and outputs JSON to stdout, following a strict API contract for reliable automation.
+
+This repository provides composable bash tools designed specifically for AI agents and automation. All tools follow a consistent JSON-based contract that makes them predictable and easy to use programmatically. The project uses a namespace-based organization (wiki.search, fs.read, etc.) with automatic discovery and installation.
+
+## Core Documentation
+
+- [API Contract](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/api-contract.md): **START HERE** - The formal JSON stdin/stdout specification that all tools follow
+- [Installation Guide](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/installation.md): Complete installation instructions including agent mode for automated setup
+- [Development Guide](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/development.md): How to create new tools following the contract
+
+## Quick Start for AI Agents
+
+```bash
+# Install tools programmatically (returns JSON)
+AGENT_MODE=1 curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | bash -s -- wiki.search
+
+# Use a tool (JSON in → JSON out)
+echo '{"q":"artificial intelligence"}' | wiki.search
+
+# Get tool schema for validation
+wiki.search --schema
+```
+
+## Tool Categories
+
+- [Hello Tools](https://github.com/chrishayuk/chuk-ai-bash-tools/tree/main/tools/hello): Test tools for verification (hello.world)
+- [Wiki Tools](https://github.com/chrishayuk/chuk-ai-bash-tools/tree/main/tools/wiki): Wikipedia operations (wiki.search, wiki.summary)
+- [Filesystem Tools](https://github.com/chrishayuk/chuk-ai-bash-tools/tree/main/tools/fs): File operations (fs.read, fs.write, fs.diff)
+- [Web Tools](https://github.com/chrishayuk/chuk-ai-bash-tools/tree/main/tools/web): HTTP operations (web.fetch, web.scrape)
+- [JSON Tools](https://github.com/chrishayuk/chuk-ai-bash-tools/tree/main/tools/json): JSON processing (json.query, json.format)
+- [LLM Tools](https://github.com/chrishayuk/chuk-ai-bash-tools/tree/main/tools/llm): LLM integrations (llm.complete, llm.embed)
+
+## Tool Documentation
+
+- [hello.world](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/tools/hello-world.md): Test tool demonstrating the contract
+- [wiki.search](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/tools/wiki-search.md): Search Wikipedia articles
+- [wiki.summary](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/tools/wiki-summary.md): Get article summaries
+- [fs.read](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/tools/fs-read.md): Read files as JSON
+- [fs.write](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/tools/fs-write.md): Write JSON to files
+- [fs.diff](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/tools/fs-diff.md): Compare files
+- [web.fetch](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/tools/web-fetch.md): Fetch web pages
+- [json.query](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/docs/tools/json-query.md): Query JSON with jq
+
+## Agent Integration Examples
+
+### Python
+```python
+import subprocess, json
+
+def call_tool(tool, input_data):
+    result = subprocess.run(
+        [tool],
+        input=json.dumps(input_data),
+        capture_output=True,
+        text=True
+    )
+    return json.loads(result.stdout)
+
+# Example: Search Wikipedia
+results = call_tool("wiki.search", {"q": "bash scripting"})
+```
+
+### Installation Automation
+```bash
+# List available tools (JSON output)
+AGENT_MODE=1 ./install.sh --list
+
+# Install tool group
+AGENT_MODE=1 ./install.sh --group wiki
+
+# Check installation status
+echo '{"name":"Test"}' | hello.world && echo "Tools working"
+```
+
+## Key Features for Agents
+
+- **Predictable Contract**: Every tool follows the same JSON in/out pattern
+- **Self-Documenting**: `--schema` flag provides JSON schema for validation
+- **Error Handling**: Consistent error format with `ok:false` and error codes
+- **No Side Effects**: Tools are stateless unless explicitly requested
+- **Exit Codes**: Standard codes (0=success, 2=invalid input, 127=missing deps)
+- **Agent Mode**: Non-interactive installation with JSON responses
+
+## Tool Contract Summary
+
+**Input**: JSON object via stdin
+```json
+{"field": "value", "nested": {"data": 123}}
+```
+
+**Success Output**: 
+```json
+{"ok": true, "result": "data", "metadata": {}}
+```
+
+**Error Output**:
+```json
+{"ok": false, "error": "error_code", "message": "description"}
+```
+
+**Required Flags**:
+- `--help`: Usage information
+- `--schema`: JSON schema for input validation
+
+## Installation for Automation
+
+```bash
+# Non-interactive with JSON output
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
+  AGENT_MODE=1 bash -s -- wiki.search fs.read
+
+# Response format
+{
+  "status": "success",
+  "installed": ["wiki.search", "fs.read"],
+  "install_dir": "/home/user/.local/bin"
+}
+```
+
+## Testing Tools
+
+```bash
+# Verify installation
+hello.world --help
+
+# Test with sample input
+echo '{"name":"World"}' | hello.world | jq '.ok'
+
+# Validate against schema
+wiki.search --schema | jq '.properties'
+```
+
+## Optional Resources
+
+- [README](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/README.md): Human-friendly overview
+- [Contributing](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/CONTRIBUTING.md): Contribution guidelines
+- [License](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/LICENSE.md): MIT License
+- [Changelog](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/CHANGELOG.md): Version history
+- [Tests](https://github.com/chrishayuk/chuk-ai-bash-tools/tree/main/tests): Test suites using bats

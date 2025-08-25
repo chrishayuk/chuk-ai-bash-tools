@@ -1,202 +1,365 @@
-# ai-tools-wiki
+# chuk-ai-bash-tools
 
-Agent-friendly Wikipedia tools with JSON stdin/stdout contract. Built for AI assistants, automation, and pipeline processing.
+Agent-friendly bash tools with a pure JSON stdin/stdout contract. Built for AI assistants, automation, and pipeline processing.
 
-## Features
-
-- ✅ **Pure JSON I/O** - stdin JSON in, stdout JSON out
-- ✅ **Schema discovery** - `--schema` flag on every tool
-- ✅ **Proper exit codes** - non-zero on failure
-- ✅ **No configuration files** - stateless operation
-- ✅ **Minimal dependencies** - just `bash`, `curl`, `jq`
-- ✅ **AI/LLM optimized** - clean, predictable interface
-
-## Installation
+## 🚀 Quick Start
 
 ```bash
-# Install latest version
-curl -fsSL https://raw.githubusercontent.com/chrishayuk/ai-tools-wiki/main/install.sh | bash
+# Install a specific tool
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
+  bash -s -- hello.world
 
-# Install specific version
-VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/chrishayuk/ai-tools-wiki/main/install.sh | bash
+# Try it out
+echo '{"name":"World"}' | hello.world | jq
+```
 
+## 📦 Installation
+
+### Install Specific Tools
+```bash
+# Install individual tools
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
+  bash -s -- wiki.search fs.read web.fetch
+
+# Or clone and install locally
+git clone https://github.com/chrishayuk/chuk-ai-bash-tools.git
+cd chuk-ai-bash-tools
+./install.sh wiki.search json.query
+```
+
+### Install Tool Groups
+```bash
+# Install all wiki tools
+./install.sh --group wiki
+
+# Install all filesystem tools  
+./install.sh --group fs
+
+# Install everything
+./install.sh --all
+
+# Install essential bundle
+./install.sh --essential
+```
+
+### List Available Tools
+```bash
+# See what's available
+./install.sh --list
+
+# Example output:
+# hello/
+#   • hello.world
+# wiki/
+#   • wiki.search
+#   • wiki.summary
+# fs/
+#   • fs.read
+#   • fs.write
+#   • fs.diff
+```
+
+### Advanced Installation
+
+```bash
 # Custom install directory
-INSTALL_DIR=~/.local/bin curl -fsSL https://raw.githubusercontent.com/chrishayuk/ai-tools-wiki/main/install.sh | bash
+INSTALL_DIR=~/.local/bin ./install.sh wiki.search
+
+# Add prefix to commands
+./install.sh --prefix chuk- wiki.search
+# Creates: chuk-wiki.search
+
+# Dry run (see what would be installed)
+./install.sh --dry-run --group wiki
+
+# Agent mode (JSON output for automation)
+AGENT_MODE=1 ./install.sh wiki.search
 ```
 
-## Tools
+## 🤖 For AI Agents
 
-### wiki.search
+These tools are designed for AI agents and automation:
 
-Search Wikipedia and get structured results.
+### JSON Contract
+Every tool follows the same contract:
+- **Input**: JSON on stdin
+- **Output**: JSON on stdout  
+- **Errors**: Non-zero exit codes
+- **Schema**: `--schema` flag for discovery
 
-**Input schema:**
-```json
-{
-  "q": "search query",      // or use "query"
-  "lang": "en",             // Wikipedia language code (optional, default: "en")
-  "limit": 5,               // Number of results (optional, default: 5, max: 50)
-  "timeout": 10             // Request timeout in seconds (optional, default: 10)
-}
-```
-
-**Output schema:**
-```json
-{
-  "ok": true,
-  "count": 5,
-  "results": [
-    {
-      "title": "Alan Turing",
-      "pageid": 1208,
-      "snippet": "Alan Mathison Turing was an English mathematician, computer scientist...",
-      "url": "https://en.wikipedia.org/?curid=1208"
-    }
-  ]
-}
-```
-
-**Examples:**
-
-```bash
-# Basic search
-echo '{"q":"alan turing"}' | wiki.search | jq
-
-# With options
-echo '{"q":"café","lang":"fr","limit":3}' | wiki.search | jq
-
-# Using jq to build input
-jq -n '{q:"quantum computing",limit:10}' | wiki.search | jq
-
-# Get just titles
-echo '{"q":"python"}' | wiki.search | jq -r '.results[].title'
-
-# Error handling
-echo '{"q":"python"}' | wiki.search || echo "Search failed"
-```
-
-## Error Handling
-
-All tools follow consistent error patterns:
-
-- **Exit code 0**: Success
-- **Exit code 2**: Invalid input
-- **Exit code 22**: HTTP/network error  
-- **Exit code 127**: Missing dependencies
-
-Error responses include:
-```json
-{
-  "ok": false,
-  "error": "error_description",
-  "status": 404  // HTTP status when applicable
-}
-```
-
-## Dependencies
-
-- `bash` 4.0+
-- `curl`
-- `jq` 1.6+
-
-Check dependencies:
-```bash
-wiki.search --help  # Shows deps and usage
-```
-
-## Development
-
-### Running tests
-```bash
-bats tests/
-```
-
-### Adding a new tool
-1. Create tool in `bin/` following the JSON contract
-2. Add to `TOOLS` array in `install.sh`
-3. Update version in `VERSION`
-4. Tag release: `git tag v0.2.0 && git push --tags`
-
-### Tool contract
-Every tool must:
-- Read JSON from stdin
-- Write JSON to stdout
-- Write errors to stderr
-- Exit non-zero on failure
-- Support `--help` and `--schema` flags
-- Have no side effects by default
-
-## Use Cases
-
-### AI/LLM Agents
+### Agent Installation
 ```python
 import subprocess
 import json
 
-def wiki_search(query, limit=5):
+# Install tools programmatically
+result = subprocess.run(
+    ["bash", "-c", "curl -fsSL .../install.sh | AGENT_MODE=1 bash -s -- wiki.search"],
+    capture_output=True,
+    text=True
+)
+install_info = json.loads(result.stdout)
+if install_info["status"] == "success":
+    print(f"Installed: {install_info['installed']}")
+```
+
+### Agent Usage
+```python
+def wiki_search(query):
     result = subprocess.run(
         ["wiki.search"],
-        input=json.dumps({"q": query, "limit": limit}),
+        input=json.dumps({"q": query}),
         capture_output=True,
         text=True
     )
     return json.loads(result.stdout)
 
-# Use in agent
-data = wiki_search("artificial intelligence", limit=3)
+# Use the tool
+data = wiki_search("artificial intelligence")
 for article in data["results"]:
-    print(f"- {article['title']}: {article['url']}")
+    print(f"{article['title']}: {article['url']}")
 ```
 
-### Shell Pipelines
-```bash
-# Find and summarize
-echo '{"q":"bash scripting"}' | wiki.search | \
-  jq -r '.results[0].url' | \
-  xargs curl -sL | \
-  grep -A 5 "Bash is"
+## 📚 Available Tools
 
-# Bulk search
-for term in "python" "ruby" "golang"; do
-  echo "{\"q\":\"$term programming\"}" | wiki.search | \
-    jq -r '.results[0].title'
+### Hello Tools
+- `hello.world` - Test tool to verify installation
+
+### Wiki Tools
+- `wiki.search` - Search Wikipedia articles
+- `wiki.summary` - Get article summaries (coming soon)
+- `wiki.page` - Fetch full articles (coming soon)
+
+### Filesystem Tools
+- `fs.read` - Read files as JSON
+- `fs.write` - Write JSON to files
+- `fs.diff` - Compare files
+- `fs.list` - List directory contents (coming soon)
+
+### Web Tools
+- `web.fetch` - Fetch web pages
+- `web.scrape` - Extract structured data (coming soon)
+- `web.screenshot` - Capture screenshots (coming soon)
+
+### JSON Tools
+- `json.query` - Query JSON with jq expressions
+- `json.format` - Pretty-print JSON
+- `json.validate` - Validate against schema (coming soon)
+
+### LLM Tools
+- `llm.complete` - Get LLM completions (coming soon)
+- `llm.embed` - Generate embeddings (coming soon)
+
+## 💻 Usage Examples
+
+### Hello World
+```bash
+# Basic
+echo '{"name":"World"}' | hello.world | jq
+
+# With options
+echo '{"name":"AI","greeting":"Hey","excited":true}' | hello.world | jq
+# Output: {"ok":true,"message":"Hey, AI!","timestamp":"...","greeted":"AI"}
+
+# Get schema
+hello.world --schema | jq
+```
+
+### Wikipedia Search
+```bash
+# Search for articles
+echo '{"q":"bash scripting"}' | wiki.search | jq
+
+# Search in French with limit
+echo '{"q":"café","lang":"fr","limit":3}' | wiki.search | jq
+
+# Extract just URLs
+echo '{"q":"python"}' | wiki.search | jq -r '.results[].url'
+```
+
+### Filesystem Operations
+```bash
+# Read a file
+echo '{"path":"config.json"}' | fs.read | jq
+
+# Write JSON to file
+echo '{"path":"output.json","content":{"key":"value"}}' | fs.write | jq
+
+# Compare files
+echo '{"file1":"a.txt","file2":"b.txt"}' | fs.diff | jq
+```
+
+### Pipeline Examples
+```bash
+# Search and extract first result
+echo '{"q":"linux"}' | wiki.search | jq -r '.results[0].url'
+
+# Chain tools together
+echo '{"q":"bash"}' | wiki.search | \
+  jq -r '.results[0].pageid' | \
+  xargs -I {} echo '{"pageid":"{}"}' | \
+  wiki.summary | jq
+
+# Bulk operations
+for term in python ruby golang; do
+  echo "{\"q\":\"$term\"}" | wiki.search | jq -r '.results[0].title'
 done
 ```
 
-### CI/CD Integration
-```yaml
-- name: Search for documentation
-  run: |
-    echo '{"q":"github actions"}' | wiki.search > results.json
-    jq -e '.count > 0' results.json || exit 1
+## 🛠 Development
+
+### Tool Contract
+Every tool must:
+1. Read JSON from stdin
+2. Write JSON to stdout  
+3. Exit non-zero on failure
+4. Support `--help` and `--schema`
+5. Have no side effects by default
+6. Write errors to stderr
+
+### Creating a New Tool
+
+1. Create tool file in appropriate namespace:
+```bash
+mkdir -p tools/mygroup
+cat > tools/mygroup/mytool << 'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Tool implementation following the contract
+schema() {
+    cat <<'JSON'
+{
+  "type": "object",
+  "properties": {
+    "input": {"type": "string"}
+  }
+}
+JSON
+}
+
+# Parse arguments
+case "${1:-}" in
+    --schema) schema; exit 0;;
+    --help) echo "mytool - description"; exit 0;;
+esac
+
+# Read JSON, process, output JSON
+input="$(cat)"
+echo '{"ok":true,"result":"processed"}'
+EOF
+
+chmod +x tools/mygroup/mytool
 ```
 
-## License
+2. Test locally:
+```bash
+echo '{"input":"test"}' | tools/mygroup/mytool | jq
+```
 
-MIT
+3. Install and test:
+```bash
+./install.sh mygroup.mytool
+echo '{"input":"test"}' | mygroup.mytool | jq
+```
 
-## Contributing
+### Running Tests
+```bash
+# Install test framework
+npm install -g bats
 
-PRs welcome! Please:
+# Run all tests
+bats tests/
+
+# Run specific test
+bats tests/wiki/test_search.bats
+```
+
+## 🔧 Dependencies
+
+- `bash` 4.0+
+- `curl`
+- `jq` 1.6+
+- Additional tools may require specific dependencies
+
+Check dependencies for a tool:
+```bash
+wiki.search --help  # Shows required dependencies
+```
+
+## 📋 Environment Variables
+
+- `INSTALL_DIR` - Installation directory (default: `~/.local/bin`)
+- `AGENT_MODE` - Set to 1 for JSON output
+- `TOOL_PREFIX` - Prefix for installed tools
+- `GITHUB_OWNER` - Override repo owner
+- `VERSION` - Install specific version/tag
+
+## 🐛 Troubleshooting
+
+### Installation Issues
+
+```bash
+# Check what would be installed
+./install.sh --dry-run wiki.search
+
+# Verbose installation
+./install.sh --trace wiki.search
+
+# Force reinstall
+./install.sh --force wiki.search
+```
+
+### PATH Issues
+
+If tools aren't found after installation:
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+export PATH="$PATH:$HOME/.local/bin"
+
+# Reload shell
+source ~/.bashrc
+```
+
+### Windows Support
+
+Use WSL2 for best compatibility:
+```powershell
+# Install WSL2 (PowerShell as Admin)
+wsl --install
+
+# Then use normally in WSL2
+curl -fsSL .../install.sh | bash -s -- hello.world
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Add your tool following the JSON contract
+4. Add tests in `tests/`
+5. Submit a pull request
+
+### Guidelines
+- Keep tools focused and composable
 - Follow the JSON stdin/stdout contract
-- Add tests for new tools
-- Update README with examples
-- Keep tools stateless and side-effect free
+- Include `--schema` and `--help`
+- Write comprehensive tests
+- Document with examples
 
-## Roadmap
+## 📄 License
 
-- [x] `wiki.search` - Search Wikipedia
-- [ ] `wiki.summary` - Get article summary by pageid
-- [ ] `wiki.page` - Get full article content
-- [ ] `wiki.categories` - Get article categories
-- [ ] `wiki.links` - Get article links
+MIT - See [LICENSE.md](LICENSE.md)
 
-## Related Projects
+## 🙏 Acknowledgments
 
-- `ai-tools-fs` - Filesystem operations
-- `ai-tools-net` - Network utilities
-- `ai-tools-data` - Data processing
+Built for AI agents and humans who love clean, composable tools.
+
+## 📮 Support
+
+- Issues: [GitHub Issues](https://github.com/chrishayuk/chuk-ai-bash-tools/issues)
+- Discussions: [GitHub Discussions](https://github.com/chrishayuk/chuk-ai-bash-tools/discussions)
 
 ---
 
-**Note:** Replace `chrishayuk` with your GitHub username in the installation instructions.s
+**Note:** This project is under active development. Tools marked as "coming soon" are planned for future releases.
