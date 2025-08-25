@@ -1,0 +1,21 @@
+# Force LF line endings for all shell scripts and tools
+*.sh text eol=lf
+install.sh text eol=lf
+
+# Force LF for all tools (no extension)
+tools/** text eol=lf
+
+# Force LF for test scripts
+tests/*.sh text eol=lf
+
+# Ensure Makefile uses LF
+Makefile text eol=lf
+
+# Documentation can use native line endings
+*.md text
+*.txt text
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary

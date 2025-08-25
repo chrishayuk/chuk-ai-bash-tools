@@ -175,18 +175,21 @@ REPO_URL="https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/contents/$TOOL
 TAG="${VERSION:-main}"
 
 # Get list of tool directories (namespaces)
-NAMESPACES=$(curl -fsSL "$REPO_URL" 2>/dev/null | jq -r '.[] | select(.type=="dir") | .name') || {
-    # If we can't reach GitHub API, fall back to local tools
-    if [[ -d "$TOOLS_BASE_DIR" ]]; then
-        # Simple approach for Windows compatibility
-        NAMESPACES=""
-        for dir in "$TOOLS_BASE_DIR"/*; do
-            if [[ -d "$dir" ]]; then
-                NAMESPACES="$NAMESPACES $(basename "$dir")"
-            fi
-        done
-        warn "Using local tools (GitHub API unavailable)"
-    else
+# Prefer local files if they exist (important for CI testing)
+if [[ -d "$TOOLS_BASE_DIR" ]] && [[ -n "$(ls -A "$TOOLS_BASE_DIR" 2>/dev/null)" ]]; then
+    # Use local files when available
+    NAMESPACES=""
+    for dir in "$TOOLS_BASE_DIR"/*; do
+        if [[ -d "$dir" ]]; then
+            NAMESPACES="$NAMESPACES $(basename "$dir")"
+        fi
+    done
+    [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "Using local tools directory"
+else
+    # Try GitHub API if no local tools
+    [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "Fetching namespaces from GitHub API: $REPO_URL"
+    NAMESPACES=$(curl -fsSL "$REPO_URL" 2>/dev/null | jq -r '.[] | select(.type=="dir") | .name') || {
+        [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "GitHub API failed"
         if [[ "$LIST_MODE" == "1" ]]; then
             # In list mode, we can return empty list
             NAMESPACES=""
@@ -195,8 +198,11 @@ NAMESPACES=$(curl -fsSL "$REPO_URL" 2>/dev/null | jq -r '.[] | select(.type=="di
             error "Failed to fetch tool list from repository"
             exit 1
         fi
-    fi
-}
+    }
+fi
+
+# Debug: Show what namespaces we found
+[[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "Found namespaces: $NAMESPACES"
 
 # Build tool list (using regular array for Bash 3.2 compatibility)
 AVAILABLE_TOOLS=()
@@ -209,6 +215,12 @@ for namespace in $NAMESPACES; do
         [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "Checking namespace: $namespace in $TOOLS_BASE_DIR/$namespace"
         for file in "$TOOLS_BASE_DIR/$namespace"/*; do
             [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "  Checking file: $file"
+            # Extra debug for Windows
+            if [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]]; then
+                [[ -e "$file" ]] && warn "    exists: yes" || warn "    exists: no"
+                [[ -f "$file" ]] && warn "    is regular file: yes" || warn "    is regular file: no"
+                [[ -d "$file" ]] && warn "    is directory: yes" || warn "    is directory: no"
+            fi
             if [[ -f "$file" ]]; then
                 filename=$(basename "$file")
                 [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "    -> Is file: $filename"
@@ -220,7 +232,7 @@ for namespace in $NAMESPACES; do
                         ;;
                     *) 
                         TOOLS="$TOOLS $filename"
-                        [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "    -> Added to TOOLS"
+                        [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "    -> Added to TOOLS: current TOOLS='$TOOLS'"
                         ;;
                 esac
             else
