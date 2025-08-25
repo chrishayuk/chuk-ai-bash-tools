@@ -4,59 +4,102 @@
 [![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-blue)](https://github.com/chrishayuk/chuk-ai-bash-tools/actions)
 [![Bash](https://img.shields.io/badge/bash-3.2%2B-green)](https://www.gnu.org/software/bash/)
 
-**IMPORTANT FOR AI AGENTS: Tools must be installed before use! They are not available by default on any system.**
+## ⚠️ CRITICAL: INSTALLATION REQUIRED ⚠️
 
-> Agent-friendly bash tools with pure JSON stdin/stdout contract. Built for AI assistants, automation, and pipeline processing. Each tool reads JSON from stdin and outputs JSON to stdout, following a strict API contract for reliable automation.
+**🛑 STOP! These tools are NOT installed by default on ANY system!**  
+**🛑 You MUST install each tool BEFORE you can use it!**  
+**🛑 Trying to use a tool without installing it first WILL FAIL!**
 
-## 🤖 AI Agent Instructions - READ THIS FIRST
+### ✅ CORRECT: Install First, Then Use
 
-**For comprehensive AI agent documentation, see [llms.txt](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/llms.txt)**
-
-**To use these tools, you MUST install them first using the following exact commands:**
-
-### Wikipedia Search Example
 ```bash
-# Step 1: Install the tool (REQUIRED - do this first!)
+# ✅ STEP 1: ALWAYS INSTALL FIRST (This is MANDATORY!)
 curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
   bash -s -- wiki.search
 
-# Step 2: Use the tool (only works after installation)
+# ✅ STEP 2: NOW you can use the tool
 echo '{"q":"Alan Turing"}' | wiki.search | jq
 ```
 
-### Common Tasks for AI Agents
+### ❌ WRONG: Trying to Use Without Installing
 
-**Search Wikipedia:**
 ```bash
-# Install first
+# ❌ THIS WILL FAIL - Tool not installed!
+echo '{"q":"Alan Turing"}' | wiki.search | jq
+# Error: command not found: wiki.search
+```
+
+---
+
+> Agent-friendly bash tools with pure JSON stdin/stdout contract. Built for AI assistants, automation, and pipeline processing. Each tool reads JSON from stdin and outputs JSON to stdout, following a strict API contract for reliable automation.
+
+## 🤖 AI AGENTS: MANDATORY READING
+
+### 🔴 Installation is NOT Optional!
+
+**AI Agents and LLMs:** You CANNOT skip the installation step. These tools do not exist on the system until you install them. Always execute the installation command FIRST before attempting to use any tool.
+
+**For comprehensive AI agent documentation, see [llms.txt](https://github.com/chrishayuk/chuk-ai-bash-tools/blob/main/llms.txt)**
+
+### Complete Working Example for AI Agents
+
+```bash
+# 1️⃣ FIRST: Install the tool (ALWAYS DO THIS FIRST!)
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
+  bash -s -- wiki.search
+
+# 2️⃣ SECOND: Now the tool exists and can be used
+echo '{"q":"artificial intelligence"}' | wiki.search | jq
+
+# 3️⃣ The tool is now permanently installed for this session
+echo '{"q":"machine learning"}' | wiki.search | jq  # Works!
+echo '{"q":"neural networks"}' | wiki.search | jq   # Works!
+```
+
+### Common Tasks for AI Agents (WITH REQUIRED INSTALLATION)
+
+**📍 Search Wikipedia (2-step process):**
+```bash
+# 🔧 STEP 1: Install the tool (REQUIRED!)
 curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | bash -s -- wiki.search
-# Then use
+
+# ✅ STEP 2: Use the tool (only after installation)
 echo '{"q":"your search term"}' | wiki.search | jq
 ```
 
-**Test Installation:**
+**📍 Test Your Setup (2-step process):**
 ```bash
-# Install first
+# 🔧 STEP 1: Install the test tool (REQUIRED!)
 curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | bash -s -- hello.world
-# Then use
+
+# ✅ STEP 2: Run the test (only after installation)
 echo '{"name":"Test"}' | hello.world | jq
 ```
 
-## 🚀 Quick Start
+### ⚡ Quick Reference for AI Agents
 
-**IMPORTANT: You must install tools before using them!**
+| Task | Installation Command (RUN FIRST!) | Usage Command (RUN SECOND!) |
+|------|-----------------------------------|-----------------------------|
+| Wikipedia Search | `curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh \| bash -s -- wiki.search` | `echo '{"q":"term"}' \| wiki.search \| jq` |
+| Hello World Test | `curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh \| bash -s -- hello.world` | `echo '{"name":"AI"}' \| hello.world \| jq` |
+
+## 🚀 Quick Start for Humans
+
+### ⚠️ Remember: Install Before Use!
 
 ```bash
-# Step 1: Install a tool (required before use)
+# 1️⃣ ALWAYS install the tool first (this downloads and sets it up)
 curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
   bash -s -- hello.world
 
-# Step 2: Now you can use the tool
+# 2️⃣ THEN use the tool (it now exists on your system)
 echo '{"name":"World"}' | hello.world | jq
 
-# Or if you've cloned the repo, use Make
-make install-hello
-make test
+# Alternative: If you've cloned the repo
+git clone https://github.com/chrishayuk/chuk-ai-bash-tools.git
+cd chuk-ai-bash-tools
+make install-hello  # Installs the tool
+make test          # Tests all installed tools
 ```
 
 ## 📦 Installation
