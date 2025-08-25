@@ -65,23 +65,36 @@ jobs:
         
     - name: Test local installation
       run: |
+        set -x  # Enable debug output
+        
         # Test actual installation
         # Use temp directory that works on all platforms
         TESTDIR="${RUNNER_TEMP:-/tmp}/test-install"
+        echo "Creating directory: $TESTDIR"
         mkdir -p "$TESTDIR"
         
         # Install (will use agent mode in CI)
+        echo "Installing hello.world..."
         INSTALL_RESULT=$(INSTALL_DIR="$TESTDIR" FORCE=1 bash ./install.sh hello.world)
-        echo "$INSTALL_RESULT"
+        echo "Install result: $INSTALL_RESULT"
         
         # Verify installation succeeded via JSON output
-        echo "$INSTALL_RESULT" | jq -e '.status == "success"' > /dev/null
+        echo "Checking install status..."
+        echo "$INSTALL_RESULT" | jq -e '.status == "success"' > /dev/null || { echo "Install status check failed"; exit 1; }
+        echo "Install status: OK"
         
         # Verify file exists
-        test -f "$TESTDIR/hello.world"
+        echo "Checking if file exists at: $TESTDIR/hello.world"
+        ls -la "$TESTDIR/" || true
+        test -f "$TESTDIR/hello.world" || { echo "File not found: $TESTDIR/hello.world"; exit 1; }
+        echo "File exists: OK"
         
         # Test the tool works
-        echo '{"name":"CI"}' | "$TESTDIR/hello.world" | jq -e '.ok == true' > /dev/null
+        echo "Testing the tool..."
+        echo '{"name":"CI"}' | "$TESTDIR/hello.world" | jq -e '.ok == true' > /dev/null || { echo "Tool test failed"; exit 1; }
+        echo "Tool test: OK"
+        
+        echo "All tests passed!"
       shell: bash
         
   shellcheck:
