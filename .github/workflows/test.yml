@@ -69,8 +69,6 @@ jobs:
         
     - name: Test local installation
       run: |
-        echo "Starting test..."
-        
         # Test actual installation
         # Use temp directory that works on all platforms
         if [[ "$RUNNER_OS" == "Windows" ]]; then
@@ -79,89 +77,20 @@ jobs:
         else
           TESTDIR="${RUNNER_TEMP:-/tmp}/test-install"
         fi
-        echo "Test directory: $TESTDIR"
         mkdir -p "$TESTDIR"
         
-        # Debug: Check what files exist
-        echo "=== Debug: File system check ==="
-        echo "Files in tools/:"
-        ls -la tools/
-        echo "---"
-        echo "Files in tools/hello/:"
-        ls -la tools/hello/
-        echo "---"
-        echo "Files in tools/wiki/:"
-        ls -la tools/wiki/
-        echo "---"
-        
-        # Debug file type detection
-        echo "=== Debug: File type detection ==="
-        file tools/hello/world || echo "file command failed"
-        stat tools/hello/world 2>/dev/null || echo "stat failed"
-        [[ -f tools/hello/world ]] && echo "world is a file" || echo "world is NOT a file"
-        [[ -x tools/hello/world ]] && echo "world is executable" || echo "world is NOT executable"
-        echo "---"
-        
-        # Debug the installer's namespace discovery
-        echo "=== Debug: Namespace discovery ==="
-        TOOLS_BASE_DIR="tools"
-        echo "Looking for directories in $TOOLS_BASE_DIR/*"
-        for dir in "$TOOLS_BASE_DIR"/*; do
-            echo "Found path: $dir"
-            if [[ -d "$dir" ]]; then
-                echo "  -> IS a directory: $(basename "$dir")"
-                for file in "$dir"/*; do
-                    echo "    Checking: $file"
-                    if [[ -f "$file" ]]; then
-                        echo "      -> IS a file: $(basename "$file")"
-                    else
-                        echo "      -> NOT a file"
-                    fi
-                done
-            else
-                echo "  -> NOT a directory"
-            fi
-        done
-        echo "---"
-        
-        # First check if installer can list tools
-        echo "=== Running installer --list ==="
-        AGENT_MODE=1 bash ./install.sh --list || echo "List failed"
-        echo "---"
-        
         # Install (will use agent mode in CI)
-        echo "Installing hello.world..."
-        INSTALL_RESULT=$(INSTALL_DIR="$TESTDIR" FORCE=1 bash ./install.sh hello.world 2>&1) || {
-          echo "Installation failed with exit code: $?"
-          echo "Output: $INSTALL_RESULT"
-          exit 1
-        }
+        INSTALL_RESULT=$(INSTALL_DIR="$TESTDIR" FORCE=1 bash ./install.sh hello.world)
         echo "$INSTALL_RESULT"
         
         # Verify installation succeeded via JSON output
-        echo "Verifying installation..."
-        echo "$INSTALL_RESULT" | jq -e '.status == "success"' > /dev/null || {
-          echo "Status check failed"
-          echo "$INSTALL_RESULT" | jq '.'
-          exit 1
-        }
+        echo "$INSTALL_RESULT" | jq -e '.status == "success"' > /dev/null
         
         # Verify file exists
-        echo "Checking file exists..."
-        test -f "$TESTDIR/hello.world" || {
-          echo "File not found: $TESTDIR/hello.world"
-          ls -la "$TESTDIR/"
-          exit 1
-        }
+        test -f "$TESTDIR/hello.world"
         
         # Test the tool works
-        echo "Testing tool..."
-        echo '{"name":"CI"}' | "$TESTDIR/hello.world" | jq -e '.ok == true' > /dev/null || {
-          echo "Tool test failed"
-          exit 1
-        }
-        
-        echo "All tests passed!"
+        echo '{"name":"CI"}' | "$TESTDIR/hello.world" | jq -e '.ok == true' > /dev/null
       shell: bash
         
   shellcheck:

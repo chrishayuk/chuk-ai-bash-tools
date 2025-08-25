@@ -184,12 +184,9 @@ if [[ -d "$TOOLS_BASE_DIR" ]] && [[ -n "$(ls -A "$TOOLS_BASE_DIR" 2>/dev/null)" 
             NAMESPACES="$NAMESPACES $(basename "$dir")"
         fi
     done
-    [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "Using local tools directory"
 else
     # Try GitHub API if no local tools
-    [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "Fetching namespaces from GitHub API: $REPO_URL"
     NAMESPACES=$(curl -fsSL "$REPO_URL" 2>/dev/null | jq -r '.[] | select(.type=="dir") | .name') || {
-        [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "GitHub API failed"
         if [[ "$LIST_MODE" == "1" ]]; then
             # In list mode, we can return empty list
             NAMESPACES=""
@@ -201,9 +198,6 @@ else
     }
 fi
 
-# Debug: Show what namespaces we found
-[[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "Found namespaces: $NAMESPACES"
-
 # Build tool list (using regular array for Bash 3.2 compatibility)
 AVAILABLE_TOOLS=()
 for namespace in $NAMESPACES; do
@@ -211,32 +205,14 @@ for namespace in $NAMESPACES; do
         # Use local files if available
         # Simple file listing for Windows compatibility
         TOOLS=""
-        # Debug on Windows
-        [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "Checking namespace: $namespace in $TOOLS_BASE_DIR/$namespace"
         for file in "$TOOLS_BASE_DIR/$namespace"/*; do
-            [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "  Checking file: $file"
-            # Extra debug for Windows
-            if [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]]; then
-                [[ -e "$file" ]] && warn "    exists: yes" || warn "    exists: no"
-                [[ -f "$file" ]] && warn "    is regular file: yes" || warn "    is regular file: no"
-                [[ -d "$file" ]] && warn "    is directory: yes" || warn "    is directory: no"
-            fi
             if [[ -f "$file" ]]; then
                 filename=$(basename "$file")
-                [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "    -> Is file: $filename"
                 # Skip hidden files (starting with .)
                 case "$filename" in
-                    .*) 
-                        [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "    -> Skipping hidden file"
-                        continue 
-                        ;;
-                    *) 
-                        TOOLS="$TOOLS $filename"
-                        [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "    -> Added to TOOLS: current TOOLS='$TOOLS'"
-                        ;;
+                    .*) continue ;;
+                    *) TOOLS="$TOOLS $filename" ;;
                 esac
-            else
-                [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "    -> NOT a file"
             fi
         done
     else
@@ -245,14 +221,10 @@ for namespace in $NAMESPACES; do
     fi
     # Only process if TOOLS is not empty (trim spaces)
     TOOLS=$(echo "$TOOLS" | xargs)
-    [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "  TOOLS for $namespace: '$TOOLS'"
     if [[ -n "$TOOLS" ]]; then
         for tool in $TOOLS; do
             AVAILABLE_TOOLS+=("$namespace.$tool")
-            [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "    Added to AVAILABLE_TOOLS: $namespace.$tool"
         done
-    else
-        [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "  No tools found for $namespace"
     fi
 done
 
