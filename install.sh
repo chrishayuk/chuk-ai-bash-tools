@@ -176,20 +176,32 @@ TAG="${VERSION:-main}"
 
 # Get list of tool directories (namespaces)
 NAMESPACES=$(curl -fsSL "$REPO_URL" 2>/dev/null | jq -r '.[] | select(.type=="dir") | .name') || {
-    if [[ "$LIST_MODE" == "1" ]]; then
-        # In list mode, we can return empty list
-        NAMESPACES=""
-        warn "Unable to fetch tool list from repository"
+    # If we can't reach GitHub API, fall back to local tools
+    if [[ -d "$TOOLS_BASE_DIR" ]]; then
+        NAMESPACES=$(find "$TOOLS_BASE_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2>/dev/null)
+        warn "Using local tools (GitHub API unavailable)"
     else
-        error "Failed to fetch tool list from repository"
-        exit 1
+        if [[ "$LIST_MODE" == "1" ]]; then
+            # In list mode, we can return empty list
+            NAMESPACES=""
+            warn "Unable to fetch tool list from repository"
+        else
+            error "Failed to fetch tool list from repository"
+            exit 1
+        fi
     fi
 }
 
 # Build tool list (using regular array for Bash 3.2 compatibility)
 AVAILABLE_TOOLS=()
 for namespace in $NAMESPACES; do
-    TOOLS=$(curl -fsSL "$REPO_URL/$namespace" 2>/dev/null | jq -r '.[] | select(.type=="file") | .name') || continue
+    if [[ -d "$TOOLS_BASE_DIR/$namespace" ]]; then
+        # Use local files if available
+        TOOLS=$(find "$TOOLS_BASE_DIR/$namespace" -maxdepth 1 -type f -exec basename {} \; 2>/dev/null)
+    else
+        # Try to fetch from GitHub API
+        TOOLS=$(curl -fsSL "$REPO_URL/$namespace" 2>/dev/null | jq -r '.[] | select(.type=="file") | .name') || continue
+    fi
     for tool in $TOOLS; do
         AVAILABLE_TOOLS+=("$namespace.$tool")
     done
@@ -351,23 +363,42 @@ for tool in "${VALID_TOOLS[@]}"; do
     
     [[ "$AGENT_MODE" == "0" ]] && echo -n "  • $tool ... "
     
-    # Download tool
-    URL="https://raw.githubusercontent.com/$GITHUB_OWNER/$GITHUB_REPO/$TAG/$TOOLS_BASE_DIR/$namespace/$name"
+    # Try local file first, then download from GitHub
+    LOCAL_FILE="$TOOLS_BASE_DIR/$namespace/$name"
     
-    if curl -fsSL "$URL" -o "$TMP_DIR/$install_name" 2>/dev/null; then
-        chmod +x "$TMP_DIR/$install_name"
-        
-        # Move to install directory
-        if mv "$TMP_DIR/$install_name" "$INSTALL_DIR/$install_name" 2>/dev/null; then
-            INSTALLED+=("$tool")
-            [[ "$AGENT_MODE" == "0" ]] && echo -e "${GREEN}✓${NC}"
+    if [[ -f "$LOCAL_FILE" ]]; then
+        # Use local file
+        if cp "$LOCAL_FILE" "$TMP_DIR/$install_name" 2>/dev/null && chmod +x "$TMP_DIR/$install_name"; then
+            if mv "$TMP_DIR/$install_name" "$INSTALL_DIR/$install_name" 2>/dev/null; then
+                INSTALLED+=("$tool")
+                [[ "$AGENT_MODE" == "0" ]] && echo -e "${GREEN}✓${NC}"
+            else
+                FAILED+=("$tool")
+                [[ "$AGENT_MODE" == "0" ]] && echo -e "${RED}✗ (install failed)${NC}"
+            fi
         else
             FAILED+=("$tool")
-            [[ "$AGENT_MODE" == "0" ]] && echo -e "${RED}✗ (install failed)${NC}"
+            [[ "$AGENT_MODE" == "0" ]] && echo -e "${RED}✗ (copy failed)${NC}"
         fi
     else
-        FAILED+=("$tool")
-        [[ "$AGENT_MODE" == "0" ]] && echo -e "${RED}✗ (download failed)${NC}"
+        # Download from GitHub
+        URL="https://raw.githubusercontent.com/$GITHUB_OWNER/$GITHUB_REPO/$TAG/$TOOLS_BASE_DIR/$namespace/$name"
+        
+        if curl -fsSL "$URL" -o "$TMP_DIR/$install_name" 2>/dev/null; then
+            chmod +x "$TMP_DIR/$install_name"
+            
+            # Move to install directory
+            if mv "$TMP_DIR/$install_name" "$INSTALL_DIR/$install_name" 2>/dev/null; then
+                INSTALLED+=("$tool")
+                [[ "$AGENT_MODE" == "0" ]] && echo -e "${GREEN}✓${NC}"
+            else
+                FAILED+=("$tool")
+                [[ "$AGENT_MODE" == "0" ]] && echo -e "${RED}✗ (install failed)${NC}"
+            fi
+        else
+            FAILED+=("$tool")
+            [[ "$AGENT_MODE" == "0" ]] && echo -e "${RED}✗ (download failed)${NC}"
+        fi
     fi
 done
 

@@ -23,99 +23,99 @@ TOOLS := $(shell find $(TOOLS_DIR) -type f -name '*' ! -name '.*' 2>/dev/null | 
 # Default target
 .PHONY: help
 help:
-	@echo "$(BLUE)chuk-ai-bash-tools Makefile$(NC)"
-	@echo ""
-	@echo "$(YELLOW)Available targets:$(NC)"
-	@echo "  $(GREEN)help$(NC)           - Show this help message"
-	@echo ""
-	@echo "$(YELLOW)Testing:$(NC)"
-	@echo "  $(GREEN)test$(NC)           - Run all tests"
-	@echo "  $(GREEN)test-ci$(NC)        - Run CI-compatible tests"
-	@echo "  $(GREEN)test-hello$(NC)     - Test hello.world tool"
-	@echo "  $(GREEN)test-wiki$(NC)      - Test wiki.search tool"
-	@echo "  $(GREEN)test-installer$(NC) - Test installer script"
-	@echo "  $(GREEN)test-coverage$(NC)  - Check test coverage"
-	@echo "  $(GREEN)test-contract$(NC)  - Test API contract compliance"
-	@echo ""
-	@echo "$(YELLOW)Installation:$(NC)"
-	@echo "  $(GREEN)install$(NC)        - Install all tools"
-	@echo "  $(GREEN)install-hello$(NC)  - Install hello.world tool"
-	@echo "  $(GREEN)install-wiki$(NC)   - Install wiki tools"
-	@echo "  $(GREEN)install-local$(NC)  - Install from local repository"
-	@echo "  $(GREEN)uninstall$(NC)      - Remove all installed tools"
-	@echo ""
-	@echo "$(YELLOW)Development:$(NC)"
-	@echo "  $(GREEN)check$(NC)          - Check dependencies"
-	@echo "  $(GREEN)lint$(NC)           - Run shellcheck on scripts"
-	@echo "  $(GREEN)format$(NC)         - Format shell scripts"
-	@echo "  $(GREEN)validate$(NC)       - Validate all tools"
-	@echo "  $(GREEN)list$(NC)           - List available tools"
-	@echo ""
-	@echo "$(YELLOW)Maintenance:$(NC)"
-	@echo "  $(GREEN)clean$(NC)          - Clean temporary files"
-	@echo "  $(GREEN)update$(NC)         - Update from upstream"
-	@echo "  $(GREEN)version$(NC)        - Show version information"
+	@printf "$(BLUE)chuk-ai-bash-tools Makefile$(NC)\n"
+	@printf "\n"
+	@printf "$(YELLOW)Available targets:$(NC)\n"
+	@printf "  $(GREEN)help$(NC)           - Show this help message\n"
+	@printf "\n"
+	@printf "$(YELLOW)Testing:$(NC)\n"
+	@printf "  $(GREEN)test$(NC)           - Run all tests\n"
+	@printf "  $(GREEN)test-ci$(NC)        - Run CI-compatible tests\n"
+	@printf "  $(GREEN)test-hello$(NC)     - Test hello.world tool\n"
+	@printf "  $(GREEN)test-wiki$(NC)      - Test wiki.search tool\n"
+	@printf "  $(GREEN)test-installer$(NC) - Test installer script\n"
+	@printf "  $(GREEN)test-coverage$(NC)  - Check test coverage\n"
+	@printf "  $(GREEN)test-contract$(NC)  - Test API contract compliance\n"
+	@printf "\n"
+	@printf "$(YELLOW)Installation:$(NC)\n"
+	@printf "  $(GREEN)install$(NC)        - Install all tools\n"
+	@printf "  $(GREEN)install-hello$(NC)  - Install hello.world tool\n"
+	@printf "  $(GREEN)install-wiki$(NC)   - Install wiki tools\n"
+	@printf "  $(GREEN)install-local$(NC)  - Install from local repository\n"
+	@printf "  $(GREEN)uninstall$(NC)      - Remove all installed tools\n"
+	@printf "\n"
+	@printf "$(YELLOW)Development:$(NC)\n"
+	@printf "  $(GREEN)check$(NC)          - Check dependencies\n"
+	@printf "  $(GREEN)lint$(NC)           - Run shellcheck on scripts\n"
+	@printf "  $(GREEN)format$(NC)         - Format shell scripts\n"
+	@printf "  $(GREEN)validate$(NC)       - Validate all tools\n"
+	@printf "  $(GREEN)list$(NC)           - List available tools\n"
+	@printf "\n"
+	@printf "$(YELLOW)Maintenance:$(NC)\n"
+	@printf "  $(GREEN)clean$(NC)          - Clean temporary files\n"
+	@printf "  $(GREEN)update$(NC)         - Update from upstream\n"
+	@printf "  $(GREEN)version$(NC)        - Show version information\n"
 
 # Testing targets
 .PHONY: test
 test:
-	@echo "$(BLUE)Running all tests...$(NC)"
+	@printf "$(BLUE)Running all tests...$(NC)\n"
 	@bash $(TESTS_DIR)/run_all.sh
 
 .PHONY: test-ci
 test-ci:
-	@echo "$(BLUE)Running CI tests...$(NC)"
+	@printf "$(BLUE)Running CI tests...$(NC)\n"
 	@bash $(TESTS_DIR)/run_ci.sh
 
 .PHONY: test-hello
 test-hello:
-	@echo "$(BLUE)Testing hello.world tool...$(NC)"
+	@printf "$(BLUE)Testing hello.world tool...$(NC)\n"
 	@bash $(TESTS_DIR)/test_hello.sh
 
 .PHONY: test-wiki
 test-wiki:
-	@echo "$(BLUE)Testing wiki.search tool...$(NC)"
+	@printf "$(BLUE)Testing wiki.search tool...$(NC)\n"
 	@bash $(TESTS_DIR)/test_wiki.sh
 
 .PHONY: test-installer
 test-installer:
-	@echo "$(BLUE)Testing installer...$(NC)"
+	@printf "$(BLUE)Testing installer...$(NC)\n"
 	@bash $(TESTS_DIR)/test_installer.sh
 
 .PHONY: test-coverage
 test-coverage:
-	@echo "$(BLUE)Checking test coverage...$(NC)"
-	@echo ""
+	@printf "$(BLUE)Checking test coverage...$(NC)\n"
+	@printf "\n"
 	@for tool in $(TOOLS_DIR)/*/*; do \
 		if [[ -f "$$tool" ]]; then \
 			name=$$(echo "$$tool" | sed 's|$(TOOLS_DIR)/||' | tr '/' '.'); \
-			echo -n "$$name: "; \
+			printf "$$name: "; \
 			if $$tool --help > /dev/null 2>&1; then \
-				echo -n "$(GREEN)✓$(NC) "; \
+				printf "$(GREEN)✓$(NC) "; \
 			else \
-				echo -n "$(RED)✗$(NC) "; \
+				printf "$(RED)✗$(NC) "; \
 			fi; \
 			if $$tool --schema | jq -e . > /dev/null 2>&1; then \
-				echo -n "$(GREEN)✓$(NC) "; \
+				printf "$(GREEN)✓$(NC) "; \
 			else \
-				echo -n "$(RED)✗$(NC) "; \
+				printf "$(RED)✗$(NC) "; \
 			fi; \
-			echo ""; \
+			printf "\n"; \
 		fi; \
 	done
 
 .PHONY: test-contract
 test-contract:
-	@echo "$(BLUE)Testing API contract compliance...$(NC)"
+	@printf "$(BLUE)Testing API contract compliance...$(NC)\n"
 	@for tool in $(TOOLS_DIR)/*/*; do \
 		if [[ -f "$$tool" ]]; then \
 			name=$$(basename "$$tool"); \
-			echo -n "Testing $$name... "; \
+			printf "Testing $$name... "; \
 			if $$tool --schema | jq -e '.type' > /dev/null 2>&1 && \
 			   echo '{}' | $$tool 2>/dev/null | jq -e '.ok' > /dev/null 2>&1; then \
-				echo "$(GREEN)✓$(NC)"; \
+				printf "$(GREEN)✓$(NC)\n"; \
 			else \
-				echo "$(RED)✗$(NC)"; \
+				printf "$(RED)✗$(NC)\n"; \
 			fi; \
 		fi; \
 	done
@@ -123,128 +123,128 @@ test-contract:
 # Installation targets
 .PHONY: install
 install:
-	@echo "$(BLUE)Installing all tools...$(NC)"
+	@printf "$(BLUE)Installing all tools...$(NC)\n"
 	@FORCE=1 bash ./install.sh --all
 
 .PHONY: install-hello
 install-hello:
-	@echo "$(BLUE)Installing hello.world...$(NC)"
+	@printf "$(BLUE)Installing hello.world...$(NC)\n"
 	@FORCE=1 bash ./install.sh hello.world
 
 .PHONY: install-wiki
 install-wiki:
-	@echo "$(BLUE)Installing wiki tools...$(NC)"
+	@printf "$(BLUE)Installing wiki tools...$(NC)\n"
 	@FORCE=1 bash ./install.sh --group wiki
 
 .PHONY: install-local
 install-local:
-	@echo "$(BLUE)Installing tools locally...$(NC)"
+	@printf "$(BLUE)Installing tools locally...$(NC)\n"
 	@mkdir -p $(INSTALL_DIR)
 	@for tool in $(TOOLS_DIR)/*/*; do \
 		if [[ -f "$$tool" ]]; then \
 			namespace=$$(basename $$(dirname "$$tool")); \
 			name=$$(basename "$$tool"); \
 			install_name="$$namespace.$$name"; \
-			echo "Installing $$install_name..."; \
+			printf "Installing $$install_name...\n"; \
 			cp "$$tool" "$(INSTALL_DIR)/$$install_name"; \
 			chmod +x "$(INSTALL_DIR)/$$install_name"; \
 		fi; \
 	done
-	@echo "$(GREEN)Installation complete!$(NC)"
+	@printf "$(GREEN)Installation complete!$(NC)\n"
 
 .PHONY: uninstall
 uninstall:
-	@echo "$(BLUE)Uninstalling tools...$(NC)"
+	@printf "$(BLUE)Uninstalling tools...$(NC)\n"
 	@for tool in $(TOOLS_DIR)/*/*; do \
 		if [[ -f "$$tool" ]]; then \
 			namespace=$$(basename $$(dirname "$$tool")); \
 			name=$$(basename "$$tool"); \
 			install_name="$$namespace.$$name"; \
 			if [[ -f "$(INSTALL_DIR)/$$install_name" ]]; then \
-				echo "Removing $$install_name..."; \
+				printf "Removing $$install_name...\n"; \
 				rm -f "$(INSTALL_DIR)/$$install_name"; \
 			fi; \
 		fi; \
 	done
-	@echo "$(GREEN)Uninstall complete!$(NC)"
+	@printf "$(GREEN)Uninstall complete!$(NC)\n"
 
 # Development targets
 .PHONY: check
 check:
-	@echo "$(BLUE)Checking dependencies...$(NC)"
+	@printf "$(BLUE)Checking dependencies...$(NC)\n"
 	@for cmd in bash jq curl; do \
 		if command -v $$cmd > /dev/null 2>&1; then \
-			echo "  $$cmd: $(GREEN)✓$(NC)"; \
+			printf "  $$cmd: $(GREEN)✓$(NC)\n"; \
 		else \
-			echo "  $$cmd: $(RED)✗ Missing$(NC)"; \
+			printf "  $$cmd: $(RED)✗ Missing$(NC)\n"; \
 		fi; \
 	done
-	@echo ""
-	@echo "Bash version: $$(bash --version | head -1)"
-	@echo "jq version: $$(jq --version 2>/dev/null || echo 'Not installed')"
-	@echo "curl version: $$(curl --version | head -1)"
+	@printf "\n"
+	@printf "Bash version: $$(bash --version | head -1)\n"
+	@printf "jq version: $$(jq --version 2>/dev/null || echo 'Not installed')\n"
+	@printf "curl version: $$(curl --version | head -1)\n"
 
 .PHONY: lint
 lint:
-	@echo "$(BLUE)Running shellcheck...$(NC)"
+	@printf "$(BLUE)Running shellcheck...$(NC)\n"
 	@if command -v shellcheck > /dev/null 2>&1; then \
 		shellcheck -S warning install.sh $(TOOLS_DIR)/*/* $(TESTS_DIR)/*.sh 2>/dev/null || true; \
 	else \
-		echo "$(YELLOW)Warning: shellcheck not installed$(NC)"; \
-		echo "Install with: brew install shellcheck (macOS) or apt install shellcheck (Linux)"; \
+		printf "$(YELLOW)Warning: shellcheck not installed$(NC)\n"; \
+		printf "Install with: brew install shellcheck (macOS) or apt install shellcheck (Linux)\n"; \
 	fi
 
 .PHONY: format
 format:
-	@echo "$(BLUE)Formatting shell scripts...$(NC)"
+	@printf "$(BLUE)Formatting shell scripts...$(NC)\n"
 	@if command -v shfmt > /dev/null 2>&1; then \
 		shfmt -i 2 -w install.sh $(TOOLS_DIR)/*/* $(TESTS_DIR)/*.sh; \
-		echo "$(GREEN)Formatting complete!$(NC)"; \
+		printf "$(GREEN)Formatting complete!$(NC)\n"; \
 	else \
-		echo "$(YELLOW)Warning: shfmt not installed$(NC)"; \
-		echo "Install with: brew install shfmt (macOS) or apt install shfmt (Linux)"; \
+		printf "$(YELLOW)Warning: shfmt not installed$(NC)\n"; \
+		printf "Install with: brew install shfmt (macOS) or apt install shfmt (Linux)\n"; \
 	fi
 
 .PHONY: validate
 validate:
-	@echo "$(BLUE)Validating all tools...$(NC)"
+	@printf "$(BLUE)Validating all tools...$(NC)\n"
 	@errors=0; \
 	for tool in $(TOOLS_DIR)/*/*; do \
 		if [[ -f "$$tool" ]]; then \
 			name=$$(echo "$$tool" | sed 's|$(TOOLS_DIR)/||' | tr '/' '.'); \
-			echo -n "Validating $$name... "; \
+			printf "Validating $$name... "; \
 			if [[ ! -x "$$tool" ]]; then \
-				echo "$(RED)✗ Not executable$(NC)"; \
+				printf "$(RED)✗ Not executable$(NC)\n"; \
 				errors=$$((errors + 1)); \
 			elif ! $$tool --help > /dev/null 2>&1; then \
-				echo "$(RED)✗ Missing --help$(NC)"; \
+				printf "$(RED)✗ Missing --help$(NC)\n"; \
 				errors=$$((errors + 1)); \
 			elif ! $$tool --schema > /dev/null 2>&1; then \
-				echo "$(RED)✗ Missing --schema$(NC)"; \
+				printf "$(RED)✗ Missing --schema$(NC)\n"; \
 				errors=$$((errors + 1)); \
 			else \
-				echo "$(GREEN)✓$(NC)"; \
+				printf "$(GREEN)✓$(NC)\n"; \
 			fi; \
 		fi; \
 	done; \
 	if [[ $$errors -gt 0 ]]; then \
-		echo "$(RED)Validation failed with $$errors errors$(NC)"; \
+		printf "$(RED)Validation failed with $$errors errors$(NC)\n"; \
 		exit 1; \
 	else \
-		echo "$(GREEN)All tools validated successfully!$(NC)"; \
+		printf "$(GREEN)All tools validated successfully!$(NC)\n"; \
 	fi
 
 .PHONY: list
 list:
-	@echo "$(BLUE)Available tools:$(NC)"
+	@printf "$(BLUE)Available tools:$(NC)\n"
 	@for namespace in $(TOOLS_DIR)/*; do \
 		if [[ -d "$$namespace" ]]; then \
 			ns_name=$$(basename "$$namespace"); \
-			echo "$(YELLOW)$$ns_name/:$(NC)"; \
+			printf "$(YELLOW)$$ns_name/:$(NC)\n"; \
 			for tool in "$$namespace"/*; do \
 				if [[ -f "$$tool" ]]; then \
 					tool_name=$$(basename "$$tool"); \
-					echo "  • $$ns_name.$$tool_name"; \
+					printf "  • $$ns_name.$$tool_name\n"; \
 				fi; \
 			done; \
 		fi; \
@@ -253,34 +253,34 @@ list:
 # Maintenance targets
 .PHONY: clean
 clean:
-	@echo "$(BLUE)Cleaning temporary files...$(NC)"
+	@printf "$(BLUE)Cleaning temporary files...$(NC)\n"
 	@find . -name '*.tmp' -delete
 	@find . -name '*.log' -delete
 	@find . -name '.DS_Store' -delete
 	@rm -rf /tmp/wikisearch.* /tmp/test-install
-	@echo "$(GREEN)Clean complete!$(NC)"
+	@printf "$(GREEN)Clean complete!$(NC)\n"
 
 .PHONY: update
 update:
-	@echo "$(BLUE)Updating from upstream...$(NC)"
+	@printf "$(BLUE)Updating from upstream...$(NC)\n"
 	@if [[ -d .git ]]; then \
 		git pull origin main; \
-		echo "$(GREEN)Update complete!$(NC)"; \
+		printf "$(GREEN)Update complete!$(NC)\n"; \
 	else \
-		echo "$(RED)Not a git repository$(NC)"; \
+		printf "$(RED)Not a git repository$(NC)\n"; \
 	fi
 
 .PHONY: version
 version:
-	@echo "$(BLUE)Version Information:$(NC)"
+	@printf "$(BLUE)Version Information:$(NC)\n"
 	@if [[ -f VERSION ]]; then \
-		echo "chuk-ai-bash-tools version: $$(cat VERSION)"; \
+		printf "chuk-ai-bash-tools version: $$(cat VERSION)\n"; \
 	else \
-		echo "chuk-ai-bash-tools version: development"; \
+		printf "chuk-ai-bash-tools version: development\n"; \
 	fi
 	@if [[ -d .git ]]; then \
-		echo "Git commit: $$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')"; \
-		echo "Git branch: $$(git branch --show-current 2>/dev/null || echo 'unknown')"; \
+		printf "Git commit: $$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')\n"; \
+		printf "Git branch: $$(git branch --show-current 2>/dev/null || echo 'unknown')\n"; \
 	fi
 
 # Shortcut targets
