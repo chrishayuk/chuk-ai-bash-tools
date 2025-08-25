@@ -194,7 +194,7 @@ $ echo '{}' | wiki.search | jq
 
 ## Dependencies
 
-- `bash` 4.0+
+- `bash` 3.2+ (compatible with macOS default shell)
 - `curl`
 - `jq` 1.6+
 

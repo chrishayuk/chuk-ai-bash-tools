@@ -27,6 +27,7 @@ This enables:
 - **Predictability**: Consistent behavior across all tools
 - **Discoverability**: Self-documenting via schemas
 - **Automation**: AI agents can use tools reliably
+- **Cross-Platform**: Works on Linux, macOS, and Windows (Git Bash)
 
 ## Core Principles
 
@@ -472,6 +473,11 @@ make test
 make test-contract
 make test-coverage
 ```
+
+Tests are run automatically via GitHub Actions on:
+- Ubuntu latest
+- macOS latest  
+- Windows latest (Git Bash)
 
 For manual testing:
 ```bash
