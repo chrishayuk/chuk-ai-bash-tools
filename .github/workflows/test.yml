@@ -82,10 +82,15 @@ jobs:
         echo "Test directory: $TESTDIR"
         mkdir -p "$TESTDIR"
         
+        # First check if installer can list tools
+        echo "Listing available tools..."
+        AGENT_MODE=1 bash ./install.sh --list || echo "List failed"
+        
         # Install (will use agent mode in CI)
         echo "Installing hello.world..."
-        INSTALL_RESULT=$(INSTALL_DIR="$TESTDIR" FORCE=1 bash ./install.sh hello.world) || {
+        INSTALL_RESULT=$(INSTALL_DIR="$TESTDIR" FORCE=1 bash ./install.sh hello.world 2>&1) || {
           echo "Installation failed with exit code: $?"
+          echo "Output: $INSTALL_RESULT"
           exit 1
         }
         echo "$INSTALL_RESULT"
