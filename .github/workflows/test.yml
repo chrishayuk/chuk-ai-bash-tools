@@ -66,12 +66,16 @@ jobs:
     - name: Test local installation
       run: |
         # Test actual installation
-        mkdir -p /tmp/test-install
-        INSTALL_DIR=/tmp/test-install FORCE=1 bash ./install.sh hello.world
+        # Use temp directory that works on all platforms
+        TESTDIR="${RUNNER_TEMP:-/tmp}/test-install"
+        mkdir -p "$TESTDIR"
+        INSTALL_DIR="$TESTDIR" FORCE=1 bash ./install.sh hello.world
         
         # Verify installation
-        test -f /tmp/test-install/hello.world
-        echo '{"name":"CI"}' | /tmp/test-install/hello.world | jq -e '.ok == true'
+        test -f "$TESTDIR/hello.world"
+        
+        # Test the tool works (jq -e exits with 0 if true, 1 if false)
+        echo '{"name":"CI"}' | "$TESTDIR/hello.world" | jq -e '.ok == true' > /dev/null
       shell: bash
         
   shellcheck:
