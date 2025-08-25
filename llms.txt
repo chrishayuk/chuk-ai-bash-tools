@@ -2,7 +2,9 @@
 
 > Agent-friendly bash tools with pure JSON stdin/stdout contract. Built for AI assistants, automation, and pipeline processing. Each tool reads JSON from stdin and outputs JSON to stdout, following a strict API contract for reliable automation.
 
-This repository provides composable bash tools designed specifically for AI agents and automation. All tools follow a consistent JSON-based contract that makes them predictable and easy to use programmatically. The project uses a namespace-based organization (wiki.search, fs.read, etc.) with automatic discovery and installation. Compatible with Bash 3.2+ (including macOS default shell).
+This repository provides composable bash tools designed specifically for AI agents and automation. All tools follow a consistent JSON-based contract that makes them predictable and easy to use programmatically. The project uses a namespace-based organization (wiki.search, fs.read, etc.) with automatic discovery and installation. 
+
+**Cross-platform compatible** with Bash 3.2+ on Linux, macOS (default shell), and Windows (Git Bash). Tested via GitHub Actions CI/CD on all three platforms.
 
 ## Core Documentation
 

@@ -1,5 +1,9 @@
 # chuk-ai-bash-tools
 
+[![Test Suite](https://github.com/chrishayuk/chuk-ai-bash-tools/actions/workflows/test.yml/badge.svg)](https://github.com/chrishayuk/chuk-ai-bash-tools/actions/workflows/test.yml)
+[![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-blue)](https://github.com/chrishayuk/chuk-ai-bash-tools/actions)
+[![Bash](https://img.shields.io/badge/bash-3.2%2B-green)](https://www.gnu.org/software/bash/)
+
 Agent-friendly bash tools with a pure JSON stdin/stdout contract. Built for AI assistants, automation, and pipeline processing.
 
 ## 🚀 Quick Start
@@ -347,13 +351,26 @@ source ~/.bashrc
 
 ### Windows Support
 
-Use WSL2 for best compatibility:
+#### Option 1: Git Bash (Recommended)
+```bash
+# Install Git for Windows (includes Git Bash)
+# Download from: https://git-scm.com/download/win
+
+# Install jq (download from https://github.com/jqlang/jq/releases)
+# Place jq.exe in C:\Windows\System32 or add to PATH
+
+# Then in Git Bash:
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
+  bash -s -- hello.world
+```
+
+#### Option 2: WSL2
 ```powershell
 # Install WSL2 (PowerShell as Admin)
 wsl --install
 
 # Then use normally in WSL2
-curl -fsSL .../install.sh | bash -s -- hello.world
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | bash
 ```
 
 ## 🤝 Contributing

@@ -234,18 +234,20 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
     - uses: actions/checkout@v4
     - name: Run tests
-      run: bash tests/run_all.sh
+      run: bash tests/run_ci.sh
+      shell: bash
 ```
 
 ### Test Matrix
 Tests run on:
-- **Operating Systems**: Ubuntu, macOS
-- **Bash Versions**: 3.2+ (macOS default), 5.0+ (Linux)
+- **Operating Systems**: Ubuntu, macOS, Windows (Git Bash)
+- **Bash Versions**: 3.2+ (macOS default), 4.0+ (Linux), Git Bash (Windows)
 - **Dependencies**: Various versions of jq and curl
+- **Line Endings**: Enforced via `.gitattributes` for cross-platform compatibility
 
 ### ShellCheck Linting
 ```yaml

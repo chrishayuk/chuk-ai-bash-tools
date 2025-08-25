@@ -454,6 +454,34 @@ else
 fi
 ```
 
+## Cross-Platform Compatibility
+
+All tools must work on Linux, macOS, and Windows (Git Bash). Follow these guidelines:
+
+### Bash 3.2 Compatibility (macOS)
+- **Don't use** associative arrays (`declare -A`)
+- **Don't use** `mapfile` or `readarray`
+- **Avoid** regex matching with `=~` (use `case` statements)
+- **Always** include `exit 0` at end of scripts
+
+### Windows Compatibility
+- Line endings are enforced via `.gitattributes`
+- Use simple file operations over complex `find` commands
+- Test with Git Bash on Windows
+- Use `/tmp` for temporary files
+
+### Example - Portable Code
+```bash
+# Bad (Bash 4+ only)
+declare -A config
+[[ "$file" =~ ^\..*$ ]] && echo "hidden"
+
+# Good (Works everywhere)
+case "$file" in
+    .*) echo "hidden" ;;
+esac
+```
+
 ## Best Practices
 
 ### 1. Error Handling
