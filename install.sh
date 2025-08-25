@@ -180,7 +180,7 @@ NAMESPACES=$(curl -fsSL "$REPO_URL" 2>/dev/null | jq -r '.[] | select(.type=="di
     if [[ -d "$TOOLS_BASE_DIR" ]]; then
         # Simple approach for Windows compatibility
         NAMESPACES=""
-        for dir in "$TOOLS_BASE_DIR"/*/; do
+        for dir in "$TOOLS_BASE_DIR"/*; do
             if [[ -d "$dir" ]]; then
                 NAMESPACES="$NAMESPACES $(basename "$dir")"
             fi
@@ -205,23 +205,43 @@ for namespace in $NAMESPACES; do
         # Use local files if available
         # Simple file listing for Windows compatibility
         TOOLS=""
+        # Debug on Windows
+        [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "Checking namespace: $namespace in $TOOLS_BASE_DIR/$namespace"
         for file in "$TOOLS_BASE_DIR/$namespace"/*; do
+            [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "  Checking file: $file"
             if [[ -f "$file" ]]; then
                 filename=$(basename "$file")
+                [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "    -> Is file: $filename"
                 # Skip hidden files (starting with .)
                 case "$filename" in
-                    .*) continue ;;
-                    *) TOOLS="$TOOLS $filename" ;;
+                    .*) 
+                        [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "    -> Skipping hidden file"
+                        continue 
+                        ;;
+                    *) 
+                        TOOLS="$TOOLS $filename"
+                        [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "    -> Added to TOOLS"
+                        ;;
                 esac
+            else
+                [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "    -> NOT a file"
             fi
         done
     else
         # Try to fetch from GitHub API
         TOOLS=$(curl -fsSL "$REPO_URL/$namespace" 2>/dev/null | jq -r '.[] | select(.type=="file") | .name') || continue
     fi
-    for tool in $TOOLS; do
-        AVAILABLE_TOOLS+=("$namespace.$tool")
-    done
+    # Only process if TOOLS is not empty (trim spaces)
+    TOOLS=$(echo "$TOOLS" | xargs)
+    [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "  TOOLS for $namespace: '$TOOLS'"
+    if [[ -n "$TOOLS" ]]; then
+        for tool in $TOOLS; do
+            AVAILABLE_TOOLS+=("$namespace.$tool")
+            [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "    Added to AVAILABLE_TOOLS: $namespace.$tool"
+        done
+    else
+        [[ "$CI" == "true" ]] && [[ "$AGENT_MODE" == "1" ]] && warn "  No tools found for $namespace"
+    fi
 done
 
 # List mode
