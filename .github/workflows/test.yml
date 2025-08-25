@@ -69,12 +69,18 @@ jobs:
         # Use temp directory that works on all platforms
         TESTDIR="${RUNNER_TEMP:-/tmp}/test-install"
         mkdir -p "$TESTDIR"
-        INSTALL_DIR="$TESTDIR" FORCE=1 bash ./install.sh hello.world
         
-        # Verify installation
+        # Install (will use agent mode in CI)
+        INSTALL_RESULT=$(INSTALL_DIR="$TESTDIR" FORCE=1 bash ./install.sh hello.world)
+        echo "$INSTALL_RESULT"
+        
+        # Verify installation succeeded via JSON output
+        echo "$INSTALL_RESULT" | jq -e '.status == "success"' > /dev/null
+        
+        # Verify file exists
         test -f "$TESTDIR/hello.world"
         
-        # Test the tool works (jq -e exits with 0 if true, 1 if false)
+        # Test the tool works
         echo '{"name":"CI"}' | "$TESTDIR/hello.world" | jq -e '.ok == true' > /dev/null
       shell: bash
         
