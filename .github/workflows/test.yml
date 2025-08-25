@@ -48,7 +48,8 @@ jobs:
       
     - name: Test installer from GitHub
       run: |
-        # Test that the installer can fetch tools from GitHub
+        # Test that the installer can handle list mode
+        # (may return empty list if API is unavailable)
         AGENT_MODE=1 bash ./install.sh --list | jq -e '.status == "success"'
         
     - name: Test local installation

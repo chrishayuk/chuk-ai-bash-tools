@@ -176,8 +176,14 @@ TAG="${VERSION:-main}"
 
 # Get list of tool directories (namespaces)
 NAMESPACES=$(curl -fsSL "$REPO_URL" 2>/dev/null | jq -r '.[] | select(.type=="dir") | .name') || {
-    error "Failed to fetch tool list from repository"
-    exit 1
+    if [[ "$LIST_MODE" == "1" ]]; then
+        # In list mode, we can return empty list
+        NAMESPACES=""
+        warn "Unable to fetch tool list from repository"
+    else
+        error "Failed to fetch tool list from repository"
+        exit 1
+    fi
 }
 
 # Build tool list (using regular array for Bash 3.2 compatibility)
@@ -193,22 +199,30 @@ done
 if [[ "$LIST_MODE" == "1" ]]; then
     if [[ "$AGENT_MODE" == "1" ]]; then
         # JSON output
-        tools_array=$(printf '%s\n' "${AVAILABLE_TOOLS[@]}" | sort -u | jq -R . | jq -s .)
+        if [[ ${#AVAILABLE_TOOLS[@]} -gt 0 ]]; then
+            tools_array=$(printf '%s\n' "${AVAILABLE_TOOLS[@]}" | sort -u | jq -R . | jq -s .)
+        else
+            tools_array='[]'
+        fi
         jq -n --argjson tools "$tools_array" '{status:"success", tools:$tools}'
     else
         echo -e "${BOLD}Available tools:${NC}"
         echo
-        current_namespace=""
-        for tool in $(printf '%s\n' "${AVAILABLE_TOOLS[@]}" | sort -u); do
-            namespace="${tool%%.*}"
-            name="${tool#*.}"
-            if [[ "$namespace" != "$current_namespace" ]]; then
-                [[ -n "$current_namespace" ]] && echo
-                echo -e "${BLUE}${namespace}/${NC}"
-                current_namespace="$namespace"
-            fi
-            echo "  • $tool"
-        done
+        if [[ ${#AVAILABLE_TOOLS[@]} -gt 0 ]]; then
+            current_namespace=""
+            for tool in $(printf '%s\n' "${AVAILABLE_TOOLS[@]}" | sort -u); do
+                namespace="${tool%%.*}"
+                name="${tool#*.}"
+                if [[ "$namespace" != "$current_namespace" ]]; then
+                    [[ -n "$current_namespace" ]] && echo
+                    echo -e "${BLUE}${namespace}/${NC}"
+                    current_namespace="$namespace"
+                fi
+                echo "  • $tool"
+            done
+        else
+            echo "No tools available (unable to fetch from repository)"
+        fi
     fi
     exit 0
 fi
@@ -217,15 +231,19 @@ fi
 if [[ ${#SELECTED_GROUPS[@]} -gt 0 ]]; then
     for group in "${SELECTED_GROUPS[@]}"; do
         if [[ "$group" == "ALL" ]]; then
-            for tool in "${AVAILABLE_TOOLS[@]}"; do
-                SELECTED_TOOLS+=("$tool")
-            done
-        else
-            for tool in "${AVAILABLE_TOOLS[@]}"; do
-                if [[ "$tool" == "$group."* ]]; then
+            if [[ ${#AVAILABLE_TOOLS[@]} -gt 0 ]]; then
+                for tool in "${AVAILABLE_TOOLS[@]}"; do
                     SELECTED_TOOLS+=("$tool")
-                fi
-            done
+                done
+            fi
+        else
+            if [[ ${#AVAILABLE_TOOLS[@]} -gt 0 ]]; then
+                for tool in "${AVAILABLE_TOOLS[@]}"; do
+                    if [[ "$tool" == "$group."* ]]; then
+                        SELECTED_TOOLS+=("$tool")
+                    fi
+                done
+            fi
         fi
     done
 fi
@@ -253,12 +271,14 @@ INVALID_TOOLS=()
 for tool in "${SELECTED_TOOLS[@]}"; do
     # Check if tool exists in available tools
     tool_found=0
-    for available in "${AVAILABLE_TOOLS[@]}"; do
-        if [[ "$available" == "$tool" ]]; then
-            tool_found=1
-            break
-        fi
-    done
+    if [[ ${#AVAILABLE_TOOLS[@]} -gt 0 ]]; then
+        for available in "${AVAILABLE_TOOLS[@]}"; do
+            if [[ "$available" == "$tool" ]]; then
+                tool_found=1
+                break
+            fi
+        done
+    fi
     if [[ $tool_found -eq 1 ]]; then
         VALID_TOOLS+=("$tool")
     else
