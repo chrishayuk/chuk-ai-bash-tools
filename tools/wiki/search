@@ -100,3 +100,6 @@ jq --arg lang "$lang" -c '
     | { ok:true, count:(length), results:. }
   end
 ' "$body_file"
+
+# Ensure clean exit
+exit 0

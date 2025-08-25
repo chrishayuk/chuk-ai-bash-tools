@@ -177,3 +177,6 @@ fi
 
 # Trace completion if requested
 [[ $TRACE -eq 1 ]] && echo "DEBUG: Completed successfully" >&2
+
+# Ensure clean exit
+exit 0
