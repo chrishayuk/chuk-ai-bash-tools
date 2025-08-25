@@ -49,7 +49,8 @@ fi
 
 # Test 4: Check Bash 3.2 compatibility (no associative arrays)
 echo -n "  Test 4: Bash 3.2 compat... "
-if ! grep -q "declare -A" install.sh; then
+# Check for actual associative array declarations (not in comments or strings)
+if ! grep -E '^[[:space:]]*declare[[:space:]]+-A' install.sh > /dev/null 2>&1; then
     echo -e "${GREEN}✓${NC}"
     TESTS_PASSED=$((TESTS_PASSED + 1))
 else

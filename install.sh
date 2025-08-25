@@ -31,7 +31,7 @@ else
     GREEN='\033[0;32m'
     YELLOW='\033[1;33m'
     BLUE='\033[0;34m'
-    MAGENTA='\033[0;35m'
+    # MAGENTA='\033[0;35m'  # Reserved for future use
     BOLD='\033[1m'
     NC='\033[0m'
 fi
@@ -244,6 +244,7 @@ if [[ ${#SELECTED_TOOLS[@]} -eq 0 ]] && [[ "$AGENT_MODE" == "0" ]]; then
 fi
 
 # Remove duplicates
+# shellcheck disable=SC2207
 SELECTED_TOOLS=($(printf '%s\n' "${SELECTED_TOOLS[@]}" | sort -u))
 
 # Validate selected tools

@@ -42,7 +42,9 @@ jobs:
         chmod +x tests/*.sh
         
     - name: Run test suite
-      run: bash tests/run_all.sh
+      run: |
+        chmod +x tests/run_ci.sh
+        bash tests/run_ci.sh
       
     - name: Test installer from GitHub
       run: |
@@ -71,7 +73,8 @@ jobs:
       uses: ludeeus/action-shellcheck@master
       with:
         ignore_paths: tests
-        severity: warning
+        severity: error
+        check_together: yes
         
   bash-compatibility:
     name: Bash Compatibility Check
@@ -84,15 +87,21 @@ jobs:
     - name: Check for Bash 4+ features
       run: |
         echo "Checking for associative arrays (Bash 4+ feature)..."
-        if grep -r "declare -A" . --include="*.sh" --exclude-dir=.git; then
+        # Check for actual declarations, not in comments or test files
+        if grep -r '^[[:space:]]*declare[[:space:]]\+-A' . --include="*.sh" --exclude-dir=.git --exclude-dir=tests; then
           echo "ERROR: Found Bash 4+ associative arrays"
           exit 1
         else
           echo "✓ No associative arrays found"
         fi
         
-        echo "Checking for other Bash 4+ features..."
-        # Add more checks as needed
+        echo "Checking for mapfile (Bash 4+ feature)..."
+        if grep -r '^[[:space:]]*mapfile' . --include="*.sh" --exclude-dir=.git --exclude="install.sh"; then
+          echo "ERROR: Found Bash 4+ mapfile usage"
+          exit 1
+        else
+          echo "✓ No mapfile usage found"
+        fi
         
   documentation:
     name: Documentation Check

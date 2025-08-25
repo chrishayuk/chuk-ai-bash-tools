@@ -30,6 +30,7 @@ help:
 	@echo ""
 	@echo "$(YELLOW)Testing:$(NC)"
 	@echo "  $(GREEN)test$(NC)           - Run all tests"
+	@echo "  $(GREEN)test-ci$(NC)        - Run CI-compatible tests"
 	@echo "  $(GREEN)test-hello$(NC)     - Test hello.world tool"
 	@echo "  $(GREEN)test-wiki$(NC)      - Test wiki.search tool"
 	@echo "  $(GREEN)test-installer$(NC) - Test installer script"
@@ -60,6 +61,11 @@ help:
 test:
 	@echo "$(BLUE)Running all tests...$(NC)"
 	@bash $(TESTS_DIR)/run_all.sh
+
+.PHONY: test-ci
+test-ci:
+	@echo "$(BLUE)Running CI tests...$(NC)"
+	@bash $(TESTS_DIR)/run_ci.sh
 
 .PHONY: test-hello
 test-hello:
