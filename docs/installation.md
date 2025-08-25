@@ -27,7 +27,7 @@ echo '{"name":"World"}' | hello.world | jq
 ## System Requirements
 
 ### Required Dependencies
-- **bash** 4.0 or higher
+- **bash** 3.2 or higher (macOS default, Windows via Git Bash)
 - **curl** - For downloading tools and API calls
 - **jq** 1.6 or higher - For JSON processing
 
@@ -223,7 +223,28 @@ echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-### Windows (WSL2) - Recommended
+### Windows
+
+#### Option 1: Git Bash (Recommended)
+```bash
+# Install Git for Windows (includes Git Bash)
+# Download from: https://git-scm.com/download/win
+
+# Install jq via Chocolatey (in PowerShell as admin)
+choco install jq -y
+
+# Or download jq manually from:
+# https://github.com/jqlang/jq/releases
+
+# In Git Bash, install tools
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | bash
+
+# Add to PATH in Git Bash
+echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+#### Option 2: WSL2
 ```powershell
 # In PowerShell as Administrator
 wsl --install
@@ -236,17 +257,6 @@ sudo apt-get install -y curl jq
 curl -fsSL .../install.sh | bash
 ```
 
-### Windows (Git Bash)
-```bash
-# Install jq manually first
-# Download from: https://github.com/stedolan/jq/releases
-# Place jq.exe in /usr/bin/ or anywhere in PATH
-
-# Then install tools
-curl -fsSL .../install.sh | bash
-
-# Note: Performance may be slower than WSL2
-```
 
 ### Docker Container
 ```dockerfile

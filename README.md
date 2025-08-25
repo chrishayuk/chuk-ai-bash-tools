@@ -301,7 +301,7 @@ bash tests/run_all.sh
 
 ## 🔧 Dependencies
 
-- `bash` 3.2+ (compatible with macOS default shell)
+- `bash` 3.2+ (compatible with macOS default shell, Windows via Git Bash)
 - `curl`
 - `jq` 1.6+
 - Additional tools may require specific dependencies
