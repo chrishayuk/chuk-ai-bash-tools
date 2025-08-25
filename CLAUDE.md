@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repository contains **agent-friendly bash tools** that follow a strict JSON stdin/stdout contract. Each tool is designed to be composable, stateless, and easily usable by AI agents and automation pipelines.
 
+**IMPORTANT**: Tools must be installed before use! They are not available by default on any system. Use the installer script to add them to your PATH.
+
 **Cross-platform support**: Works on Linux, macOS (Bash 3.2+), and Windows (Git Bash). All platforms are tested via GitHub Actions CI/CD.
 
 ## Core Architecture
@@ -114,8 +116,14 @@ echo '{"q":"test"}' | tools/wiki/search --trace
 
 ### Installing Tools
 
+**Remember: Always install tools before trying to use them!**
+
 ```bash
-# Install specific tool
+# Install from GitHub (for users without the repo cloned)
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
+  bash -s -- wiki.search
+
+# Or if you have the repo cloned:
 ./install.sh wiki.search
 
 # Install all tools in a namespace

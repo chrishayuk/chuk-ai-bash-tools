@@ -1,6 +1,21 @@
 # chuk-ai-bash-tools
 
+**IMPORTANT FOR AI AGENTS: Tools must be installed before use! They are not available by default on any system.**
+
 > Agent-friendly bash tools with pure JSON stdin/stdout contract. Built for AI assistants, automation, and pipeline processing. Each tool reads JSON from stdin and outputs JSON to stdout, following a strict API contract for reliable automation.
+
+## Installation Required First!
+
+Before using any tool, you MUST install it:
+
+```bash
+# Example: To use wiki.search, first install it:
+curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | \
+  bash -s -- wiki.search
+
+# Only then can you use it:
+echo '{"q":"your search"}' | wiki.search | jq
+```
 
 This repository provides composable bash tools designed specifically for AI agents and automation. All tools follow a consistent JSON-based contract that makes them predictable and easy to use programmatically. The project uses a namespace-based organization (wiki.search, fs.read, etc.) with automatic discovery and installation. 
 
@@ -15,11 +30,13 @@ This repository provides composable bash tools designed specifically for AI agen
 
 ## Quick Start for AI Agents
 
+**Remember: Install tools first before using them!**
+
 ```bash
-# Install tools programmatically (returns JSON)
+# Step 1: Install tools programmatically (returns JSON)
 AGENT_MODE=1 curl -fsSL https://raw.githubusercontent.com/chrishayuk/chuk-ai-bash-tools/main/install.sh | bash -s -- wiki.search
 
-# Use a tool (JSON in → JSON out)
+# Step 2: Use the tool (JSON in → JSON out)
 echo '{"q":"artificial intelligence"}' | wiki.search
 
 # Get tool schema for validation
