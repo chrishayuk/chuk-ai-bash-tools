@@ -89,6 +89,21 @@ jobs:
         echo "Test directory: $TESTDIR"
         mkdir -p "$TESTDIR"
         
+        # Check what tools are available
+        echo "Checking available tools..."
+        echo "Current directory: $(pwd)"
+        ls -la . | head -20
+        echo "---"
+        ls -la tools/ || echo "tools/ not found"
+        echo "---"
+        ls -la tools/hello/ || echo "tools/hello not found"
+        echo "---"
+        ls -la tools/wiki/ || echo "tools/wiki not found"
+        
+        # List available tools via installer
+        echo "Listing tools via installer..."
+        AGENT_MODE=1 bash ./install.sh --list || echo "List failed"
+        
         # Install (will use agent mode in CI)
         echo "Installing..."
         INSTALL_RESULT=$(INSTALL_DIR="$TESTDIR" FORCE=1 bash ./install.sh hello.world 2>&1) || {

@@ -178,7 +178,13 @@ TAG="${VERSION:-main}"
 NAMESPACES=$(curl -fsSL "$REPO_URL" 2>/dev/null | jq -r '.[] | select(.type=="dir") | .name') || {
     # If we can't reach GitHub API, fall back to local tools
     if [[ -d "$TOOLS_BASE_DIR" ]]; then
-        NAMESPACES=$(find "$TOOLS_BASE_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2>/dev/null)
+        # Simple approach for Windows compatibility
+        NAMESPACES=""
+        for dir in "$TOOLS_BASE_DIR"/*/; do
+            if [[ -d "$dir" ]]; then
+                NAMESPACES="$NAMESPACES $(basename "$dir")"
+            fi
+        done
         warn "Using local tools (GitHub API unavailable)"
     else
         if [[ "$LIST_MODE" == "1" ]]; then
@@ -197,7 +203,8 @@ AVAILABLE_TOOLS=()
 for namespace in $NAMESPACES; do
     if [[ -d "$TOOLS_BASE_DIR/$namespace" ]]; then
         # Use local files if available
-        TOOLS=$(find "$TOOLS_BASE_DIR/$namespace" -maxdepth 1 -type f -exec basename {} \; 2>/dev/null)
+        # Use ls instead of find for better Windows compatibility
+        TOOLS=$(ls -1 "$TOOLS_BASE_DIR/$namespace" 2>/dev/null | grep -v "^\." || true)
     else
         # Try to fetch from GitHub API
         TOOLS=$(curl -fsSL "$REPO_URL/$namespace" 2>/dev/null | jq -r '.[] | select(.type=="file") | .name') || continue
